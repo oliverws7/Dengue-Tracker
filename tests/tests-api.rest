@@ -1,0 +1,75 @@
+@baseUrl = http://localhost:5000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MzcyOTAyMjJlYWIzODE3ZGM2MzIwMiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzY1MjIyNzA4LCJleHAiOjE3NjU4Mjc1MDgsImlzcyI6ImRlbmd1ZS10cmFja2VyLWFwaSJ9.ETGTk5joh7eTpu-J0Boc_N5_ZB0DmndEk91igkYM5T8
+
+### ==================================================
+### 1. AUTENTICAÇÃO E USUÁRIOS (Controller Corrigido)
+### ==================================================
+
+### 1.1 Health Check (Verificar se API está online)
+GET {{baseUrl}}/health
+
+### 1.2 Cadastrar Novo Usuário (Corrigido: Sem dupla criptografia)
+# Mude o email toda vez que for criar um novo, ou limpe o banco
+POST {{baseUrl}}/api/users/cadastrar
+Content-Type: application/json
+
+{
+  "nome": "Oliver Tester",
+  "email": "oliver.fix@teste.com",
+  "senha": "senhaSegura123"
+}
+
+### 1.3 Login (Deve retornar o Token)
+# Copie o "token" da resposta e coloque na variável @token lá em cima
+POST {{baseUrl}}/api/users/login
+Content-Type: application/json
+
+{
+  "email": "oliver.fix@teste.com",
+  "senha": "senhaSegura123"
+}
+
+### 1.4 Ver Perfil (Requer Token)
+GET {{baseUrl}}/api/users/perfil
+Authorization: Bearer {{token}}
+
+### ==================================================
+### 2. REPORTES (Focos de Dengue)
+### ==================================================
+
+### 2.1 Criar Reporte
+POST {{baseUrl}}/api/reports/criar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "localizacao": {
+    "lat": -23.5505,
+    "lng": -46.6333
+  },
+  "endereco": "Av. Paulista, 1000 - São Paulo",
+  "tipoCriadouro": "pneu",
+  "descricao": "Pneu abandonado com água parada na calçada"
+}
+
+### 2.2 Listar Meus Reportes
+GET {{baseUrl}}/api/reports/meus
+Authorization: Bearer {{token}}
+
+### 2.3 Listar Todos os Reportes (Público/Feed)
+GET {{baseUrl}}/api/reports/
+Authorization: Bearer {{token}}
+
+### ==================================================
+### 3. GAMIFICAÇÃO
+### ==================================================
+
+### 3.1 Ver Ranking
+GET {{baseUrl}}/api/gamification/ranking
+
+### 3.2 Estatísticas Globais
+GET {{baseUrl}}/api/gamification/estatisticas
+
+### 3.3 Coletar Recompensa Diária
+POST {{baseUrl}}/api/gamification/recompensa-diaria
+Authorization: Bearer {{token}}

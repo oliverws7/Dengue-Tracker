@@ -41,6 +41,7 @@ const autenticar = (req, res, next) => {
     try {
         const decoded = verificarToken(token);
         req.user = decoded;
+        req.userId = decoded.id; // ADICIONAR ESTA LINHA para compatibilidade com reportController
         next();
     } catch (error) {
         return res.status(401).json({

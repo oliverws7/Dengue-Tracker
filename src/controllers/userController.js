@@ -1,20 +1,10 @@
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs'); // ← ADICIONE ESTA LINHA!
+const { gerarToken } = require('../config/jwt'); // Usa a configuração centralizada
 
-// Gerar token JWT
-const gerarToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d'
-  });
-};
-
-// Cadastrar usuário - VERSÃO SIMPLIFICADA
+// Cadastrar usuário
 exports.cadastrar = async (req, res) => {
   try {
     const { nome, email, senha } = req.body;
-
-    console.log('📝 Tentando cadastrar:', { nome, email });
 
     // Verificar se usuário já existe
     const usuarioExiste = await User.findOne({ email });
@@ -25,17 +15,18 @@ exports.cadastrar = async (req, res) => {
       });
     }
 
-    // Criar usuário DIRETO sem hooks complexos
+    // CORREÇÃO 1: Criar usuário SEM criptografar a senha manualmente.
+    // O pre('save') no model User.js já fará a criptografia.
     const usuario = new User({
       nome,
       email,
-      senha: await bcrypt.hash(senha, 12) // Criptografa manualmente
+      senha // Passa a senha em texto puro para o model tratar
     });
 
     await usuario.save();
 
-    // Gerar token
-    const token = gerarToken(usuario._id);
+    // CORREÇÃO 2: Usar o gerador de token centralizado para manter padrão
+    const token = gerarToken(usuario._id, usuario.role);
 
     res.status(201).json({
       success: true,
@@ -45,12 +36,13 @@ exports.cadastrar = async (req, res) => {
         id: usuario._id,
         nome: usuario.nome,
         email: usuario.email,
-        pontos: usuario.pontos
+        pontos: usuario.pontos,
+        role: usuario.role
       }
     });
 
   } catch (error) {
-    console.log('❌ Erro detalhado:', error);
+    console.error('❌ Erro ao cadastrar:', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao cadastrar usuário',
@@ -59,15 +51,26 @@ exports.cadastrar = async (req, res) => {
   }
 };
 
-
 // Login do usuário
 exports.login = async (req, res) => {
   try {
     const { email, senha } = req.body;
 
-    // Verificar se usuário existe e senha está correta
-    const usuario = await User.findOne({ email }).select('+senha');
-    if (!usuario || !(await usuario.verificarSenha(senha))) {
+    // Verificar se usuário existe e buscar senha (que por padrão não vem na query)
+    // Nota: O método select('+senha') é necessário pois geralmente a senha é ocultada
+    const usuario = await User.findOne({ email });
+    
+    if (!usuario) {
+        return res.status(401).json({
+            success: false,
+            message: 'Email ou senha incorretos'
+        });
+    }
+
+    // CORREÇÃO 3: Usar o nome correto do método definido no Model (compararSenha)
+    const isMatch = await usuario.compararSenha(senha);
+    
+    if (!isMatch) {
       return res.status(401).json({
         success: false,
         message: 'Email ou senha incorretos'
@@ -75,7 +78,7 @@ exports.login = async (req, res) => {
     }
 
     // Gerar token
-    const token = gerarToken(usuario._id);
+    const token = gerarToken(usuario._id, usuario.role);
 
     res.json({
       success: true,
@@ -85,11 +88,13 @@ exports.login = async (req, res) => {
         id: usuario._id,
         nome: usuario.nome,
         email: usuario.email,
-        pontos: usuario.pontos
+        pontos: usuario.pontos,
+        role: usuario.role
       }
     });
 
   } catch (error) {
+    console.error('❌ Erro no login:', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao fazer login',
@@ -101,8 +106,13 @@ exports.login = async (req, res) => {
 // Buscar perfil do usuário
 exports.getPerfil = async (req, res) => {
   try {
-    const usuario = await User.findById(req.usuarioId);
+    // Nota: req.userId vem do middleware de auth
+    const usuario = await User.findById(req.userId).select('-senha');
     
+    if (!usuario) {
+        return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+    }
+
     res.json({
       success: true,
       usuario: {

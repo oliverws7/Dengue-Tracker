@@ -419,14 +419,15 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Rota para teste WebSocket SUPER SIMPLES
+// Rota para teste WebSocket CORRIGIDA (Usando Client do Socket.IO)
 app.get("/teste-simples", (req, res) => {
   const html = `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Teste WebSocket SUPER Simples</title>
+    <title>Teste WebSocket Socket.IO</title>
     <meta charset="UTF-8">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       .status { padding: 10px; font-weight: bold; margin: 10px 0; }
@@ -440,7 +441,7 @@ app.get("/teste-simples", (req, res) => {
     </style>
   </head>
   <body>
-    <h1>🧪 Teste WebSocket SUPER Simples</h1>
+    <h1>🧪 Teste Socket.IO (Corrigido)</h1>
     
     <div class="status disconnected" id="status">⚫ DESCONECTADO</div>
     
@@ -457,7 +458,6 @@ app.get("/teste-simples", (req, res) => {
     <script>
       let socket = null;
       const log = document.getElementById('log');
-      const status = document.getElementById('status');
       
       function addLog(message, type = 'info') {
         const time = new Date().toLocaleTimeString();
@@ -467,7 +467,6 @@ app.get("/teste-simples", (req, res) => {
         
         if (type === 'success') logEntry.style.color = 'green';
         if (type === 'error') logEntry.style.color = 'red';
-        if (type === 'warning') logEntry.style.color = 'orange';
         
         log.appendChild(logEntry);
         log.scrollTop = log.scrollHeight;
@@ -477,7 +476,7 @@ app.get("/teste-simples", (req, res) => {
         const statusDiv = document.getElementById('status');
         if (connected) {
           statusDiv.className = 'status connected';
-          statusDiv.textContent = '✅ CONECTADO';
+          statusDiv.textContent = '✅ CONECTADO (Socket.IO)';
           document.getElementById('btnConnect').disabled = true;
           document.getElementById('btnPing').disabled = false;
           document.getElementById('btnUser').disabled = false;
@@ -495,123 +494,87 @@ app.get("/teste-simples", (req, res) => {
       }
       
       function connect() {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          addLog('⚠️ Já está conectado!', 'warning');
-          return;
-        }
+        if (socket && socket.connected) return;
         
-        addLog('🔗 Conectando ao servidor WebSocket...');
+        addLog('🔗 Tentando conectar via Socket.IO...');
         
-        try {
-          socket = new WebSocket('ws://localhost:5000');
-          
-          socket.onopen = function() {
-            addLog('✅ CONEXÃO ESTABELECIDA COM SUCESSO!', 'success');
-            updateUI(true);
-          };
-          
-          socket.onmessage = function(event) {
-            try {
-              const data = JSON.parse(event.data);
-              addLog(\`📨 \${data.event}: \${JSON.stringify(data).substring(0, 150)}\${JSON.stringify(data).length > 150 ? '...' : ''}\`);
-            } catch (e) {
-              addLog(\`📨 Mensagem: \${event.data}\`);
-            }
-          };
-          
-          socket.onerror = function(error) {
-            addLog(\`💥 Erro na conexão: \${error.message || 'Erro desconhecido'}\`, 'error');
-            updateUI(false);
-          };
-          
-          socket.onclose = function(event) {
-            addLog(\`❌ Conexão fechada. Código: \${event.code}, Razão: "\${event.reason || 'Sem razão'}"\`, 'error');
-            updateUI(false);
-            socket = null;
-          };
-          
-        } catch (error) {
-          addLog(\`💥 Falha ao criar WebSocket: \${error.message}\`, 'error');
+        // CORREÇÃO: Usar io() em vez de new WebSocket()
+        socket = io(); 
+        
+        socket.on('connect', () => {
+          addLog('✅ Conectado com ID: ' + socket.id, 'success');
+          updateUI(true);
+        });
+        
+        socket.on('disconnect', (reason) => {
+          addLog('❌ Desconectado: ' + reason, 'error');
           updateUI(false);
-        }
+        });
+        
+        socket.on('connect_error', (error) => {
+          addLog('💥 Erro de conexão: ' + error.message, 'error');
+          updateUI(false);
+        });
+
+        // Escutar eventos específicos do seu servidor
+        socket.on('pong', (data) => {
+           addLog('🏓 Pong recebido: ' + JSON.stringify(data), 'success');
+        });
+
+        socket.on('usuario-autenticado', (data) => {
+           addLog('👤 Autenticado: ' + data.message, 'success');
+        });
+
+        socket.on('reporte-criado', (data) => {
+           addLog('📋 Reporte criado: ' + data.message, 'success');
+        });
+        
+        // Catch-all para ver qualquer evento (útil para debug)
+        socket.onAny((event, ...args) => {
+            console.log(event, args);
+        });
       }
       
       function sendPing() {
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-          addLog('⚠️ Não está conectado!', 'warning');
-          return;
-        }
-        
-        addLog('🏓 Enviando ping para o servidor...');
-        socket.send(JSON.stringify({ event: 'ping' }));
+        if (!socket) return;
+        addLog('Enviando ping...');
+        socket.emit('ping'); // Socket.IO usa .emit()
       }
       
       function testUser() {
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-          addLog('⚠️ Não está conectado!', 'warning');
-          return;
-        }
-        
+        if (!socket) return;
         const userId = 'test_' + Date.now();
-        const userName = 'Usuário Teste ' + Math.floor(Math.random() * 1000);
-        
-        const data = {
-          event: 'usuario-entrou',
-          usuarioId: userId,
-          nome: userName
-        };
-        
-        addLog(\`👤 Enviando usuário: \${userName} (ID: \${userId})\`);
-        socket.send(JSON.stringify(data));
+        const nome = 'Usuário Teste';
+        addLog('Enviando usuario-entrou...');
+        socket.emit('usuario-entrou', { usuarioId: userId, nome });
       }
       
       function testReport() {
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-          addLog('⚠️ Não está conectado!', 'warning');
-          return;
-        }
-        
-        const data = {
-          event: 'novo-reporte',
-          reporte: {
-            id: 'report_' + Date.now(),
+        if (!socket) return;
+        const dados = {
+            localizacao: { lat: -23.55, lng: -46.63 },
             tipo: 'pneu',
-            descricao: 'Pneu abandonado com água parada',
-            localizacao: {
-              lat: -23.55 + (Math.random() - 0.5) * 0.01,
-              lng: -46.63 + (Math.random() - 0.5) * 0.01
-            },
-            usuario: 'Usuário Teste',
-            pontos: 10,
-            timestamp: new Date().toISOString()
-          }
+            descricao: 'Teste socket'
         };
-        
-        addLog('📋 Enviando reporte simulado...');
-        socket.send(JSON.stringify(data));
+        addLog('Enviando novo-reporte...');
+        socket.emit('novo-reporte', dados);
       }
       
       function disconnect() {
         if (socket) {
-          addLog('🛑 Fechando conexão...');
-          socket.close();
-          socket = null;
+          socket.disconnect();
+          addLog('Desconectando manual...');
         }
-        updateUI(false);
       }
       
-      // Auto-conectar após 1 segundo
-      setTimeout(() => {
-        addLog('⏳ Iniciando conexão automática...');
-        connect();
-      }, 1000);
+      // Auto conectar ao carregar
+      setTimeout(connect, 1000);
     </script>
   </body>
   </html>
-  `;
+`;
   res.send(html);
 });
-
 // Rota básica
 app.get("/", (req, res) => {
   res.json({ 
