@@ -1,5 +1,7 @@
 # Dependências do projeto
 node_modules/
 
-# Variáveis de ambiente (Segurança)
+# .gitignore
 .env
+*.env.local
+*.env.*.local

@@ -1,46 +1,67 @@
-﻿const mongoose = require("mongoose");
+﻿const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  nome: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  senha: { type: String, required: true },
-  pontos: { type: Number, default: 0 },
-  nivel: { type: String, default: "Iniciante" },
-  experiencia: { type: Number, default: 0 },
-  conquistas: [{
-    id: String,
-    nome: String,
-    descricao: String,
-    icone: String,
-    desbloqueadoEm: { type: Date, default: Date.now }
-  }],
-  reportesRealizados: { type: Number, default: 0 },
-  focosEliminados: { type: Number, default: 0 },
-  streakDias: { type: Number, default: 0 },
-  ultimoLogin: { type: Date, default: Date.now },
-  badges: [String],
-  isAdmin: { type: Boolean, default: false }
+    nome: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
+    senha: {
+        type: String,
+        required: true,
+        minlength: 6
+    },
+    nivel: {
+        type: String,
+        enum: ['iniciante', 'cacador', 'mestre', 'lenda'],
+        default: 'iniciante'
+    },
+    pontos: {
+        type: Number,
+        default: 0
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'agente'],
+        default: 'user'
+    },
+    dataCriacao: {
+        type: Date,
+        default: Date.now
+    },
+    ultimoLogin: Date,
+    ativo: {
+        type: Boolean,
+        default: true
+    }
 }, {
-  timestamps: true
+    timestamps: true
 });
 
-// Calcular nível baseado na experiência
-userSchema.methods.calcularNivel = function() {
-  const niveis = [
-    { nome: "Iniciante", exp: 0 },
-    { nome: "Explorador", exp: 100 },
-    { nome: "Caçador", exp: 300 },
-    { nome: "Especialista", exp: 600 },
-    { nome: "Mestre", exp: 1000 },
-    { nome: "Lenda", exp: 2000 }
-  ];
-
-  for (let i = niveis.length - 1; i >= 0; i--) {
-    if (this.experiencia >= niveis[i].exp) {
-      return niveis[i].nome;
+// Hash da senha antes de salvar
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('senha')) return next();
+    
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.senha = await bcrypt.hash(this.senha, salt);
+        next();
+    } catch (error) {
+        next(error);
     }
-  }
-  return "Iniciante";
+});
+
+// Método para comparar senhas
+userSchema.methods.compararSenha = async function(senhaDigitada) {
+    return await bcrypt.compare(senhaDigitada, this.senha);
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model('User', userSchema);
