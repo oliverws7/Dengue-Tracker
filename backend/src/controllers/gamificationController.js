@@ -1,7 +1,7 @@
 ﻿const User = require("../models/User");
 
 const gamificationController = {
-  // RANKING - SEMPRE FUNCIONA
+  // RANKING
   async getRanking(req, res) {
     try {
       const ranking = await User.find()
@@ -19,7 +19,7 @@ const gamificationController = {
     }
   },
 
-  // ESTATÍSTICAS - SEMPRE FUNCIONA
+  // ESTATÍSTICAS
   async getEstatisticasGlobais(req, res) {
     try {
       const totalUsuarios = await User.countDocuments();
@@ -45,10 +45,9 @@ const gamificationController = {
     }
   },
 
-  // PERFIL - SIMPLES (AJUSTADO para req.user)
+  // PERFIL
   async getPerfil(req, res) {
     try {
-      // Verifica se o usuário está autenticado
       if (!req.user || !req.user.id) {
         return res.status(401).json({ 
           success: false, 
@@ -79,10 +78,9 @@ const gamificationController = {
     }
   },
 
-  // CONQUISTAS - SIMPLES
+  // CONQUISTAS
   async verificarConquistas(req, res) {
     try {
-      // Verifica se o usuário está autenticado
       if (!req.user || !req.user.id) {
         return res.status(401).json({ 
           success: false, 
@@ -90,16 +88,11 @@ const gamificationController = {
         });
       }
       
-      // Busca conquistas reais do usuário (exemplo)
       const usuario = await User.findById(req.user.id).select("conquistas");
       
       res.json({ 
         success: true, 
-        conquistas: usuario?.conquistas || [
-          { nome: "Primeiro Reporte", desbloqueada: true },
-          { nome: "Reporter Ativo", desbloqueada: false },
-          { nome: "Mestre da Dengue", desbloqueada: false }
-        ]
+        conquistas: usuario?.conquistas || []
       });
     } catch (error) {
       console.error('Erro ao verificar conquistas:', error);
@@ -111,10 +104,9 @@ const gamificationController = {
     }
   },
 
-  // RECOMPENSA DIÁRIA - SIMPLES
+  // RECOMPENSA DIÁRIA - CORRIGIDO (Com validação de data)
   async recompensaDiaria(req, res) {
     try {
-      // Verifica se o usuário está autenticado
       if (!req.user || !req.user.id) {
         return res.status(401).json({ 
           success: false, 
@@ -122,19 +114,40 @@ const gamificationController = {
         });
       }
       
-      // Adiciona pontos ao usuário
       const usuario = await User.findById(req.user.id);
-      if (usuario) {
-        usuario.pontos = (usuario.pontos || 0) + 10;
-        usuario.ultimaRecompensa = new Date();
-        await usuario.save();
+      
+      if (!usuario) {
+        return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
       }
+
+      // LÓGICA DE VALIDAÇÃO DE DATA
+      const agora = new Date();
+      if (usuario.ultimaRecompensa) {
+        const ultimaData = new Date(usuario.ultimaRecompensa);
+        
+        // Verifica se é o mesmo dia, mês e ano
+        const mesmoDia = ultimaData.getDate() === agora.getDate() &&
+                         ultimaData.getMonth() === agora.getMonth() &&
+                         ultimaData.getFullYear() === agora.getFullYear();
+        
+        if (mesmoDia) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Recompensa diária já resgatada hoje. Volte amanhã!' 
+          });
+        }
+      }
+
+      // Aplica a recompensa se passou na validação
+      usuario.pontos = (usuario.pontos || 0) + 10;
+      usuario.ultimaRecompensa = agora;
+      await usuario.save();
       
       res.json({ 
         success: true, 
         message: "+10 pontos pela recompensa diária!",
         pontos: 10,
-        totalPontos: usuario?.pontos || 0
+        totalPontos: usuario.pontos
       });
     } catch (error) {
       console.error('Erro ao processar recompensa:', error);

@@ -1,68 +1,50 @@
 const express = require('express');
 const router = express.Router();
 
-// Importar controllers - usar o authController corrigido
+// Importar Controllers
 const authController = require('../controllers/authController');
-const userController = require('../controllers/userController'); // Se tiver userController separado
+const userController = require('../controllers/userController');
 
-// Importar middlewares - verificar se os nomes estão corretos
-const { authenticateToken, authorizeRoles, optionalAuth } = require('../middleware/auth');
-const { validate, schemas, validateQuery } = require('../middleware/validators');
+// Importar Middlewares (baseado nos arquivos corrigidos anteriormente)
+const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { validate, schemas } = require('../middleware/validators');
 const { authLimiter } = require('../middleware/rateLimit');
 
 // ======================
 // ROTAS PÚBLICAS
 // ======================
 
-// Registro de usuário
+// Registro
 router.post('/registrar', 
-    authLimiter, // Rate limiting para registro
-    validate(schemas.auth.registrar), // Validação do schema em português
-    authController.registrar
-);
-
-// Registro em inglês (para compatibilidade)
-router.post('/register',
-    authLimiter,
-    validate(schemas.auth.register), // Schema em inglês
+    authLimiter, 
+    validate(schemas.auth.registrar), 
     authController.registrar
 );
 
 // Login
 router.post('/login',
     authLimiter,
-    validate(schemas.auth.login), // Schema em português
+    validate(schemas.auth.login),
     authController.login
 );
 
-// Login em inglês (para compatibilidade)
-router.post('/login-en',
-    authLimiter,
-    validate(schemas.auth.loginEn), // Schema em inglês
-    authController.login
-);
+// Rotas em inglês (Alias para compatibilidade)
+router.post('/register', authLimiter, validate(schemas.auth.register), authController.registrar);
+router.post('/login-en', authLimiter, validate(schemas.auth.loginEn), authController.login);
 
 // ======================
-// ROTAS PROTEGIDAS (requer autenticação)
+// ROTAS DO USUÁRIO (Requer Login)
 // ======================
 
-// Perfil do usuário autenticado
-router.get('/perfil',
-    authenticateToken,
-    authController.perfil
-);
+// Perfil do usuário logado
+router.get('/perfil', authenticateToken, authController.perfil);
+router.get('/profile', authenticateToken, authController.perfil); // Alias
 
-// Perfil em inglês (alias)
-router.get('/profile',
-    authenticateToken,
-    authController.perfil
-);
-
-// Atualizar perfil
+// Atualizar o próprio perfil
 router.put('/perfil',
     authenticateToken,
     validate(schemas.user.atualizarPerfil),
-    userController.updateUser || authController.atualizarPerfil
+    authController.atualizarPerfil
 );
 
 // Alterar senha
@@ -72,127 +54,58 @@ router.put('/alterar-senha',
     authController.alterarSenha
 );
 
-// Logout (cliente deve remover token)
-router.post('/logout',
-    authenticateToken,
-    authController.logout
-);
+// Logout
+router.post('/logout', authenticateToken, authController.logout);
 
 // ======================
-// ROTAS ADMIN
+// ROTAS ADMIN (Gerenciamento de Usuários)
 // ======================
 
-// Listar todos usuários (apenas admin)
+// Listar todos usuários
 router.get('/usuarios',
     authenticateToken,
     authorizeRoles('admin'),
-    userController.getAllUsers || ((req, res) => {
-        // Fallback se userController não existir
-        res.json({
-            success: true,
-            message: 'Lista de usuários (rota admin)',
-            users: []
-        });
-    })
+    userController.getAllUsers
 );
 
-// Listar usuários em inglês
-router.get('/users',
-    authenticateToken,
-    authorizeRoles('admin'),
-    userController.getAllUsers || ((req, res) => {
-        res.json({
-            success: true,
-            message: 'Users list (admin route)',
-            users: []
-        });
-    })
-);
-
-// Buscar usuário por ID (admin ou próprio usuário)
+// Buscar usuário por ID
 router.get('/usuarios/:id',
     authenticateToken,
     (req, res, next) => {
-        // Permite admin ver qualquer perfil ou usuário ver seu próprio
+        // Permite admin ver qualquer um, ou usuário ver a si mesmo
         if (req.user.role === 'admin' || req.user.id === req.params.id) {
             return next();
         }
-        return res.status(403).json({
-            success: false,
-            message: 'Acesso negado'
-        });
+        return res.status(403).json({ success: false, error: 'Acesso negado' });
     },
-    userController.getUserById || ((req, res) => {
-        res.json({
-            success: true,
-            message: 'Detalhes do usuário',
-            user: {
-                id: req.params.id,
-                nome: 'Usuário Teste'
-            }
-        });
-    })
+    userController.getUserById
 );
 
-// Atualizar usuário (admin pode atualizar qualquer, usuário só seu)
+// Atualizar usuário (Admin)
 router.put('/usuarios/:id',
     authenticateToken,
+    authorizeRoles('admin'), // Apenas admin altera outros usuários por aqui
     validate(schemas.user.atualizarPerfil),
-    userController.updateUser || ((req, res) => {
-        res.json({
-            success: true,
-            message: 'Usuário atualizado',
-            user: req.body
-        });
-    })
+    userController.updateUser
 );
 
-// Deletar usuário (apenas admin)
+// Deletar usuário (Admin)
 router.delete('/usuarios/:id',
     authenticateToken,
     authorizeRoles('admin'),
-    userController.deleteUser || ((req, res) => {
-        res.json({
-            success: true,
-            message: 'Usuário deletado',
-            userId: req.params.id
-        });
-    })
+    userController.deleteUser
 );
 
 // ======================
-// ROTAS DE VERIFICAÇÃO/SAÚDE
+// ROTAS DE UTILIDADE
 // ======================
 
-// Verificar token (útil para frontend)
-router.get('/verificar-token',
-    optionalAuth,
-    (req, res) => {
-        res.json({
-            success: true,
-            authenticated: req.isAuthenticated || !!req.user,
-            user: req.user || null,
-            message: req.user ? 'Token válido' : 'Token ausente ou inválido'
-        });
-    }
-);
-
-// Health check da autenticação
-router.get('/health',
-    (req, res) => {
-        res.json({
-            success: true,
-            service: 'Auth API',
-            status: 'operational',
-            timestamp: new Date().toISOString(),
-            endpoints: {
-                registrar: 'POST /api/auth/registrar',
-                login: 'POST /api/auth/login',
-                perfil: 'GET /api/auth/perfil',
-                logout: 'POST /api/auth/logout'
-            }
-        });
-    }
-);
+router.get('/verificar-token', authenticateToken, (req, res) => {
+    res.json({
+        success: true,
+        valid: true,
+        user: req.user
+    });
+});
 
 module.exports = router;

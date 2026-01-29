@@ -1,25 +1,31 @@
-// src/middlewares/health.js
+const mongoose = require('mongoose');
+
 const healthCheck = (req, res) => {
-    const healthData = {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        service: 'DengueTracker API',
-        version: process.env.npm_package_version || '1.0.0',
-        uptime: process.uptime(),
-        database: 'unknown' // Vamos melhorar isso depois
+    // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+    const dbState = mongoose.connection.readyState;
+    const dbStatusMap = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
     };
 
-    // Verifica conexão com MongoDB (se estiver configurado)
-    // try {
-    //     const dbStatus = mongoose.connection.readyState;
-    //     healthData.database = dbStatus === 1 ? 'connected' : 'disconnected';
-    //     healthData.status = dbStatus === 1 ? 'healthy' : 'degraded';
-    // } catch (error) {
-    //     healthData.database = 'error';
-    //     healthData.status = 'degraded';
-    // }
+    const isDbConnected = dbState === 1;
 
-    res.status(healthData.status === 'healthy' ? 200 : 503).json(healthData);
+    const healthData = {
+        status: isDbConnected ? 'healthy' : 'unhealthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        database: dbStatusMap[dbState] || 'unknown',
+        version: process.version,
+        environment: process.env.NODE_ENV || 'development'
+    };
+    
+    // Se o banco estiver fora, retorna 503 (Service Unavailable) em vez de 200
+    const httpStatus = isDbConnected ? 200 : 503;
+    
+    res.status(httpStatus).json(healthData);
 };
 
 module.exports = healthCheck;

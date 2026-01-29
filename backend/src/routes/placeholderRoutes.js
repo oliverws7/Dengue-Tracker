@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-// Rota placeholder genérica
+// Fallback para rotas não encontradas
+// IMPORTANTE: Este router deve ser o ÚLTIMO a ser carregado no seu app.js
 router.all('*', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: `Rota ${req.path} - Em desenvolvimento`,
-    method: req.method,
-    available: true,
-    inDevelopment: true
+  res.status(404).json({
+    success: false,
+    error: `Rota não encontrada: ${req.method} ${req.originalUrl}`,
+    code: 'ROUTE_NOT_FOUND',
+    message: 'O recurso solicitado não existe ou a rota está incorreta.'
   });
 });
 

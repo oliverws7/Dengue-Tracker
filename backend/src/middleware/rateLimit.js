@@ -1,16 +1,13 @@
 const rateLimit = require('express-rate-limit');
-const { ipKeyGenerator } = require('express-rate-limit');
 
-// Helper para IP seguro (resolve problema IPv6)
-const getClientIP = (req) => {
-  // Usa o ipKeyGenerator para lidar corretamente com IPv6
-  return ipKeyGenerator(req, req.res);
-};
+// Helper para obter IP do cliente de forma segura
+// O express-rate-limit já faz isso internamente via req.ip, mas se precisar customizar:
+const getIp = (req) => req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-// Rate limiting geral para todas as rotas
+// Rate limiting geral
 exports.generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Limite de 100 requisições por IP
+  max: 100,
   message: {
     success: false,
     error: 'Muitas requisições deste IP. Tente novamente após 15 minutos.',
@@ -19,26 +16,26 @@ exports.generalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    // Para usuários autenticados, usar userId + IP para mais precisão
-    if (req.user && req.user.userId) {
-      return `user:${req.user.userId}:${ipKeyGenerator(req, req.res)}`;
+    // Tenta pegar o ID do usuário se estiver logado (compatível com seus controllers)
+    const userId = req.user?.id || req.userId;
+    if (userId) {
+      return `user:${userId}`;
     }
-    return ipKeyGenerator(req, req.res);
+    return getIp(req);
   },
   skip: (req) => {
-    // Pular rate limiting para localhost em desenvolvimento
     if (process.env.NODE_ENV === 'development') {
-      const ip = ipKeyGenerator(req, req.res);
+      const ip = getIp(req);
       return ip === '::1' || ip === '127.0.0.1';
     }
     return false;
   }
 });
 
-// Rate limiting para autenticação (mais restritivo)
+// Rate limiting para autenticação (Login)
 exports.authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
-  max: 5, // Apenas 5 tentativas de login por hora
+  max: 5, // 5 tentativas falhas por hora
   message: {
     success: false,
     error: 'Muitas tentativas de login. Tente novamente após uma hora.',
@@ -46,21 +43,22 @@ exports.authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true, // Não conta tentativas bem-sucedidas
+  skipSuccessfulRequests: true, // Importante: não bloqueia quem acerta a senha
   keyGenerator: (req) => {
-    // Rate limit por email para prevenir ataques de força bruta
+    // Tenta limitar pelo email enviado no body, senão pelo IP
+    // Nota: Requer que o express.json() venha ANTES deste limiter no app.js
     const email = req.body?.email;
     if (email) {
-      return `auth:${email}:${ipKeyGenerator(req, req.res)}`;
+      return `auth:${email}`;
     }
-    return ipKeyGenerator(req, req.res);
+    return getIp(req);
   }
 });
 
-// Rate limiting para criação de relatórios
+// Rate limiting para relatórios
 exports.reportLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
-  max: 10, // Máximo 10 relatórios por hora
+  max: 10,
   message: {
     success: false,
     error: 'Limite de relatórios excedido. Tente novamente após uma hora.',
@@ -69,19 +67,18 @@ exports.reportLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    // Para usuários autenticados, limitar por usuário
-    if (req.user && req.user.userId) {
-      return `user:${req.user.userId}:reports`;
+    const userId = req.user?.id || req.userId;
+    if (userId) {
+      return `user:${userId}:reports`;
     }
-    // Para não autenticados, limitar por IP
-    return `ip:${ipKeyGenerator(req, req.res)}:reports`;
+    return `ip:${getIp(req)}:reports`;
   }
 });
 
 // Rate limiting para API pública
 exports.apiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hora
-  max: 1000, // 1000 requisições por hora
+  windowMs: 60 * 60 * 1000,
+  max: 1000,
   message: {
     success: false,
     error: 'Limite de requisições excedido para API pública.',
@@ -89,34 +86,35 @@ exports.apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: ipKeyGenerator
+  keyGenerator: (req) => getIp(req)
 });
 
-// Rate limiting específico para WebSocket/auth (se necessário no futuro)
+// Rate limiting para WebSocket
 exports.wsConnectionLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hora
-  max: 50, // Máximo 50 conexões WebSocket por hora
+  windowMs: 60 * 60 * 1000,
+  max: 50,
   message: {
     success: false,
     error: 'Muitas conexões WebSocket. Tente novamente mais tarde.',
     code: 'WS_CONNECTION_LIMIT'
   },
-  keyGenerator: ipKeyGenerator
+  keyGenerator: (req) => getIp(req)
 });
 
-// Rate limiting para uploads de arquivos
+// Rate limiting para uploads
 exports.uploadLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hora
-  max: 20, // Máximo 20 uploads por hora
+  windowMs: 60 * 60 * 1000,
+  max: 20,
   message: {
     success: false,
     error: 'Limite de uploads excedido. Tente novamente após uma hora.',
     code: 'UPLOAD_LIMIT_EXCEEDED'
   },
   keyGenerator: (req) => {
-    if (req.user && req.user.userId) {
-      return `user:${req.user.userId}:uploads`;
+    const userId = req.user?.id || req.userId;
+    if (userId) {
+      return `user:${userId}:uploads`;
     }
-    return ipKeyGenerator(req, req.res);
+    return getIp(req);
   }
 });

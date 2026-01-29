@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { gerarToken } = require('../config/jwt'); // Usa a configuração centralizada
+const { gerarToken } = require('../config/jwt');
 
 const userController = {
   // Cadastrar usuário
@@ -20,7 +20,7 @@ const userController = {
       const usuario = new User({
         nome,
         email,
-        senha // Senha em texto puro - o model trata a criptografia
+        senha
       });
 
       await usuario.save();
@@ -213,9 +213,9 @@ const userController = {
   // Atualizar usuário
   updateUser: async (req, res) => {
     try {
-      // Verificar permissões: usuário pode atualizar seu próprio perfil, admin pode atualizar qualquer
       const usuarioId = req.params.id;
       
+      // Verificar permissões
       if (req.user.role !== 'admin' && req.user.id !== usuarioId) {
         return res.status(403).json({
           success: false,
@@ -226,7 +226,6 @@ const userController = {
       const camposPermitidos = ['nome', 'email', 'localizacao'];
       const camposParaAtualizar = {};
       
-      // Filtrar apenas campos permitidos
       for (const campo of camposPermitidos) {
         if (req.body[campo] !== undefined) {
           camposParaAtualizar[campo] = req.body[campo];
@@ -264,7 +263,6 @@ const userController = {
   // Deletar usuário (apenas admin)
   deleteUser: async (req, res) => {
     try {
-      // Apenas admin pode deletar
       if (req.user.role !== 'admin') {
         return res.status(403).json({
           success: false,
@@ -296,14 +294,14 @@ const userController = {
   }
 };
 
-// Exportar funções individuais para compatibilidade
-exports.cadastrar = userController.cadastrar;
-exports.login = userController.login;
-exports.getPerfil = userController.getPerfil;
-exports.getAllUsers = userController.getAllUsers;
-exports.getUserById = userController.getUserById;
-exports.updateUser = userController.updateUser;
-exports.deleteUser = userController.deleteUser;
-
-// Exportar controller completo
-module.exports = userController;
+// Exportar controller completo E aliases para compatibilidade
+module.exports = {
+  ...userController,
+  cadastrar: userController.cadastrar,
+  login: userController.login,
+  getPerfil: userController.getPerfil,
+  getAllUsers: userController.getAllUsers,
+  getUserById: userController.getUserById,
+  updateUser: userController.updateUser,
+  deleteUser: userController.deleteUser
+};

@@ -1,68 +1,46 @@
 ﻿const express = require("express");
+const router = express.Router();
+
+// Controllers e Middlewares
 const gamificationController = require("../controllers/gamificationController");
-const { authenticateToken, optionalAuth } = require("../middleware/auth");
+const { authenticateToken } = require("../middleware/auth");
 const { validateQuery, schemas } = require("../middleware/validators");
 
-const router = express.Router();
+// Models (Importar no topo, nunca dentro das rotas)
+const User = require("../models/User");
+const Report = require("../models/Report");
 
 // ======================
 // ROTAS PÚBLICAS
 // ======================
 
-// Ranking de usuários (público)
+// Ranking de usuários
 router.get("/ranking", 
-    validateQuery(schemas.query.pagination), // Validação opcional de paginação
+    validateQuery(schemas.query.pagination), 
     gamificationController.getRanking
 );
 
-// Estatísticas globais (público)
+// Estatísticas globais
 router.get("/estatisticas", 
     gamificationController.getEstatisticasGlobais
 );
 
-// ======================
-// ROTAS PROTEGIDAS (requer autenticação)
-// ======================
-
-// Perfil do usuário (requer autenticação)
-router.get("/perfil", 
-    authenticateToken,
-    gamificationController.getPerfil
-);
-
-// Conquistas do usuário
-router.get("/conquistas", 
-    authenticateToken,
-    gamificationController.verificarConquistas
-);
-
-// Recompensa diária
-router.post("/recompensa-diaria", 
-    authenticateToken,
-    gamificationController.recompensaDiaria
-);
-
-// ======================
-// ROTAS ADICIONAIS (melhorias)
-// ======================
-
-// Ranking por cidade/bairro (público com filtros opcionais)
+// Ranking por cidade/bairro (Filtros)
 router.get("/ranking/local", 
-    validateQuery(schemas.query.filtrosReporte), // Reusa schema de filtros
+    validateQuery(schemas.query.filtrosReporte),
     async (req, res) => {
         try {
             const { cidade, bairro } = req.query;
             let filtro = {};
             
-            if (cidade) filtro.cidade = cidade;
-            if (bairro) filtro.bairro = bairro;
+            if (cidade) filtro.cidade = new RegExp(cidade, 'i'); // Case insensitive
+            if (bairro) filtro.bairro = new RegExp(bairro, 'i');
             
-            // Implementação básica - ajustar conforme seu modelo User
-            const User = require("../models/User");
             const ranking = await User.find(filtro)
                 .select("nome pontos nivel cidade bairro avatar")
                 .sort({ pontos: -1 })
-                .limit(20);
+                .limit(20)
+                .lean(); // .lean() para performance
                 
             res.json({
                 success: true,
@@ -70,27 +48,98 @@ router.get("/ranking/local",
                 filtros: { cidade, bairro }
             });
         } catch (error) {
+            console.error('Erro no ranking local:', error);
             res.status(500).json({
                 success: false,
-                message: "Erro ao buscar ranking local",
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+                message: "Erro ao buscar ranking local"
             });
         }
     }
 );
 
-// Estatísticas pessoais (protegido)
+// Leaderboard com paginação
+router.get("/leaderboard/:periodo", 
+    validateQuery(schemas.query.pagination),
+    async (req, res) => {
+        try {
+            const { periodo } = req.params; // 'semanal', 'mensal', 'total'
+            const page = parseInt(req.query.pagina) || 1;
+            const limit = parseInt(req.query.limite) || 20;
+            const skip = (page - 1) * limit;
+            
+            // TODO: Implementar filtro real de data para 'semanal'/'mensal'
+            // Por enquanto usa pontuação total
+            const ranking = await User.find()
+                .select("nome pontos nivel avatar")
+                .sort({ pontos: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean();
+                
+            const total = await User.countDocuments();
+            
+            res.json({
+                success: true,
+                periodo,
+                ranking,
+                paginacao: {
+                    pagina: page,
+                    limite: limit,
+                    total,
+                    totalPaginas: Math.ceil(total / limit)
+                }
+            });
+        } catch (error) {
+            console.error('Erro no leaderboard:', error);
+            res.status(500).json({
+                success: false,
+                message: "Erro ao buscar leaderboard"
+            });
+        }
+    }
+);
+
+// ======================
+// ROTAS PROTEGIDAS
+// ======================
+
+// Perfil Gamificado
+router.get("/perfil", 
+    authenticateToken,
+    gamificationController.getPerfil
+);
+
+// Conquistas
+router.get("/conquistas", 
+    authenticateToken,
+    gamificationController.verificarConquistas
+);
+
+// Resgatar Recompensa
+router.post("/recompensa-diaria", 
+    authenticateToken,
+    gamificationController.recompensaDiaria
+);
+
+// Estatísticas Pessoais Detalhadas
 router.get("/minhas-estatisticas", 
     authenticateToken,
     async (req, res) => {
         try {
-            const User = require("../models/User");
-            const Report = require("../models/Report");
+            // Usa o ID do middleware (req.user.id ou req.userId)
+            const userId = req.user.id || req.userId;
+
+            const [usuario, estatisticasReportes] = await Promise.all([
+                User.findById(userId).select("pontos nivel reportesRealizados focosEliminados conquistas").lean(),
+                Report.getEstatisticas(userId)
+            ]);
             
-            const usuario = await User.findById(req.user.id)
-                .select("pontos nivel reportesRealizados focosEliminados conquistas");
-                
-            const estatisticasReportes = await Report.getEstatisticas(req.user.id);
+            if (!usuario) {
+                return res.status(404).json({ success: false, message: "Usuário não encontrado" });
+            }
+
+            // Calcula posição no ranking global
+            const usuariosAcima = await User.countDocuments({ pontos: { $gt: usuario.pontos } });
             
             res.json({
                 success: true,
@@ -103,77 +152,30 @@ router.get("/minhas-estatisticas",
                         totalConquistas: usuario.conquistas?.length || 0
                     },
                     reportes: estatisticasReportes,
-                    posicaoRanking: usuario.posicaoRanking || "Não disponível"
+                    posicaoRanking: usuariosAcima + 1
                 }
             });
         } catch (error) {
             console.error("Erro ao buscar estatísticas pessoais:", error);
             res.status(500).json({
                 success: false,
-                message: "Erro ao buscar estatísticas pessoais",
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+                message: "Erro ao buscar estatísticas pessoais"
             });
         }
     }
 );
 
-// Leaderboard semanal/mensal (público)
-router.get("/leaderboard/:periodo", 
-    validateQuery(schemas.query.pagination),
-    async (req, res) => {
-        try {
-            const { periodo } = req.params; // 'semanal', 'mensal', 'total'
-            const { pagina = 1, limite = 20 } = req.query;
-            
-            // Em uma implementação real, você teria uma coleção separada para pontuações por período
-            // Esta é uma implementação simplificada usando os pontos totais
-            const User = require("../models/User");
-            const ranking = await User.find()
-                .select("nome pontos nivel avatar")
-                .sort({ pontos: -1 })
-                .skip((pagina - 1) * limite)
-                .limit(parseInt(limite));
-                
-            const total = await User.countDocuments();
-            
-            res.json({
-                success: true,
-                periodo,
-                ranking,
-                paginacao: {
-                    pagina: parseInt(pagina),
-                    limite: parseInt(limite),
-                    total,
-                    totalPaginas: Math.ceil(total / limite)
-                }
-            });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: "Erro ao buscar leaderboard",
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    }
-);
+// ======================
+// UTILITÁRIOS
+// ======================
 
-// Health check da gamificação
-router.get("/health", 
-    (req, res) => {
-        res.json({
-            success: true,
-            service: "Gamification API",
-            status: "operational",
-            timestamp: new Date().toISOString(),
-            endpoints: {
-                ranking: "GET /api/gamification/ranking",
-                estatisticas: "GET /api/gamification/estatisticas",
-                perfil: "GET /api/gamification/perfil (autenticado)",
-                conquistas: "GET /api/gamification/conquistas (autenticado)",
-                recompensaDiaria: "POST /api/gamification/recompensa-diaria (autenticado)"
-            }
-        });
-    }
-);
+router.get("/health", (req, res) => {
+    res.json({
+        success: true,
+        service: "Gamification API",
+        status: "operational",
+        timestamp: new Date().toISOString()
+    });
+});
 
 module.exports = router;
