@@ -11,6 +11,7 @@ const {
   uploadSingle, 
   uploadMultiple, 
   validateImage, 
+  compressImage,
   deleteFile,
   config 
 } = require('../middleware/upload');

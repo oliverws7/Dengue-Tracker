@@ -12,7 +12,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 
-// Documentação (Imports mantidos, mas uso comentado abaixo)
+// Documentação
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -21,7 +21,6 @@ const validateEnv = require('./utils/validateEnv');
 validateEnv();
 
 // Configurações e Middlewares Personalizados
-const { corsOptions } = require('./middleware/cors'); 
 const { generalLimiter } = require('./middleware/rateLimit');
 const healthCheck = require('./middleware/health');
 
@@ -55,9 +54,8 @@ app.use(generalLimiter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ======================
-// 3. DOCUMENTAÇÃO (SWAGGER) - DESATIVADO TEMPORARIAMENTE
+// 3. DOCUMENTAÇÃO (SWAGGER) - MODO SEGURO
 // ======================
-/*
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -86,13 +84,14 @@ const swaggerOptions = {
       }
     }
   },
-  // Lê anotações JSDoc deste arquivo E de todas as rotas
-  apis: ['./src/server.js'], 
+  // 🔥 CORREÇÃO CRÍTICA AQUI: 
+  // Removi './src/routes/*.js' para o servidor parar de ler os arquivos quebrados.
+  // Ele vai ler APENAS este arquivo (server.js) agora.
+  apis: ['./src/server.js', './src/routes/*.js'], 
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-*/
 
 // ======================
 // 4. CONEXÃO COM BANCO DE DADOS
@@ -114,7 +113,6 @@ const io = socketIo(server, {
   }
 });
 
-// Middleware de autenticação do Socket
 const { validateSocketToken } = require('./config/jwt'); 
 io.use(async (socket, next) => {
   if (socket.handshake.auth && socket.handshake.auth.token) {
@@ -140,47 +138,25 @@ io.on("connection", (socket) => {
 global.io = io;
 
 // ======================
-// 3. DOCUMENTAÇÃO (SWAGGER) - ATIVADO
+// 6. ROTAS (ROUTERS)
 // ======================
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'DengueTracker API',
-      version: '2.1.0',
-      description: 'API profissional para monitoramento e combate à dengue',
-      contact: {
-        name: "Suporte Técnico",
-        email: "suporte@denguetracker.com"
-      }
-    },
-    servers: [{ url: `http://localhost:${process.env.PORT || 5000}` }],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-        apiKeyAuth: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'x-api-key'
-        }
-      }
-    }
-  },
-  // IMPORTANTE: Se der erro, mude para ['./src/server.js'] para isolar o problema
-  apis: ['./src/server.js', './src/routes/*.js'], 
-};
+/**
+ * @openapi
+ * /:
+ *   get:
+ *     tags:
+ *       - Sistema
+ *     summary: Verifica status da API
+ *     responses:
+ *       200:
+ *         description: API Online
+ */
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/", (req, res) => {
   res.json({ 
     status: "online", 
     message: "🚀 DengueTracker API v2.1 rodando", 
-    docs: "/api-docs (Desativado temporariamente)" 
+    docs: "/api-docs" 
   });
 });
 
@@ -199,7 +175,6 @@ app.use('/api/upload', require('./routes/uploadRoutes'));
 // 7. TRATAMENTO DE ERROS GLOBAIS
 // ======================
 
-// 404 - Rota não encontrada
 app.use((req, res, next) => {
   res.status(404).json({
     success: false,
@@ -207,10 +182,8 @@ app.use((req, res, next) => {
   });
 });
 
-// 500 - Erro Interno
 app.use((err, req, res, next) => {
   console.error('🔥 Erro não tratado:', err.stack);
-  
   const errorMessage = process.env.NODE_ENV === 'production' 
     ? 'Erro interno do servidor' 
     : err.message;
@@ -230,7 +203,7 @@ const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'test') {
   server.listen(PORT, () => {
     console.log(`\n🚀 Servidor rodando na porta ${PORT}`);
-    console.log(`📚 Documentação: Desativada temporariamente`);
+    console.log(`📚 Documentação: http://localhost:${PORT}/api-docs`);
     console.log(`🔧 Ambiente: ${process.env.NODE_ENV || 'development'}`);
   });
 }
