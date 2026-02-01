@@ -1,118 +1,99 @@
-// src/pages/Login.jsx
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import illustration from "../assets/login-illustration.svg";
+import ThemeToggle from "../components/ThemeToggle";
 
-function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
+const schema = z.object({
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "Mínimo 6 caracteres"),
+});
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+export default function Login() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(schema) });
 
-        try {
-            // Mock de login para desenvolvimento
-            console.log('Login attempt:', { email, password });
-            
-            // Simular delay de API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Mock de sucesso
-            localStorage.setItem('token', 'mock-jwt-token');
-            localStorage.setItem('user', JSON.stringify({
-                id: '123',
-                email: email,
-                name: email === 'admin@denguetracker.com' ? 'Administrador' : 'Usuário Teste',
-                role: 'user',
-                points: 100
-            }));
-            
-            navigate('/dashboard');
-        } catch (err) {
-            setError('Erro ao fazer login. Tente novamente.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  function onSubmit(data) {
+    console.log(data);
+  }
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        🦟 DengueTracker
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Sistema de monitoramento e combate à dengue
-                    </p>
-                </div>
-                
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                            {error}
-                        </div>
-                    )}
-                    
-                    <div className="space-y-4">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="seu@email.com"
-                            />
-                        </div>
-                        
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Senha
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="••••••••"
-                            />
-                        </div>
-                    </div>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-zinc-900 transition-colors">
+      <ThemeToggle />
 
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                        >
-                            {loading ? 'Entrando...' : 'Entrar'}
-                        </button>
-                    </div>
-                    
-                    <div className="text-center text-sm text-gray-500">
-                        <p>Para teste rápido:</p>
-                        <p className="text-xs mt-1">Email: admin@denguetracker.com</p>
-                        <p className="text-xs">Senha: qualquer</p>
-                    </div>
-                </form>
-            </div>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-5xl bg-white dark:bg-zinc-800 rounded-2xl shadow-xl grid grid-cols-1 md:grid-cols-2 overflow-hidden"
+      >
+        {/* LADO ESQUERDO */}
+        <div className="hidden md:flex items-center justify-center bg-emerald-900 p-8">
+          <img src={illustration} alt="Login" className="max-w-sm" />
         </div>
-    );
-}
 
-export default Login;
+        {/* LADO DIREITO */}
+        <div className="p-10">
+          <h1 className="text-3xl font-bold text-zinc-800 dark:text-white">
+            Login
+          </h1>
+          <p className="text-zinc-500 mb-6">
+            Bem-vindo de volta 👋
+          </p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <input
+                {...register("email")}
+                placeholder="Seu e-mail"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-white outline-none"
+              />
+              {errors.email && (
+                <span className="text-red-500 text-sm">
+                  {errors.email.message}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="password"
+                {...register("password")}
+                placeholder="Sua senha"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-white outline-none"
+              />
+              {errors.password && (
+                <span className="text-red-500 text-sm">
+                  {errors.password.message}
+                </span>
+              )}
+            </div>
+
+            <div className="text-right text-sm">
+              <a href="#" className="text-emerald-600 hover:underline">
+                Esqueceu a senha?
+              </a>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 transition rounded-lg text-white font-semibold"
+            >
+              Entrar no sistema
+            </button>
+          </form>
+
+          <p className="mt-6 text-sm text-zinc-500">
+            Novo por aqui?{" "}
+            <a href="#" className="text-emerald-600 font-semibold">
+              Crie sua conta
+            </a>
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
