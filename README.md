@@ -76,7 +76,30 @@ O projeto é dividido em duas frentes principais:
    npm run dev
    ```
 
+---
 
+## 🚀 Atualizações Recentes
+
+### **Frontend**
+* **Tecnologias:** O frontend agora utiliza React com Vite para uma melhor experiência de desenvolvimento e desempenho.
+* **Funcionalidades:** Adicionadas novas páginas para visualização de relatórios e gestão de usuários.
+
+### **Backend**
+* **Segurança:** Implementação de novas rotas de autenticação e autorização.
+* **Banco de Dados:** Atualizações nas migrações para suportar novos campos e funcionalidades.
+
+---
+
+## 📦 Instalação e Configuração
+
+### **Frontend**
+
+1. **Configuração do Frontend:**
+   ```bash
+   cd frontend
+   npm install
+   ```
+   *Edite o arquivo `vite.config.js` conforme necessário para suas configurações.*
 
 ---
 
