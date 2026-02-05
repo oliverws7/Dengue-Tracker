@@ -1,18 +1,22 @@
-import { useEffect, useState } from "react";
+import React from 'react';
+import { useTheme } from '../context/ThemeContext';
+import { Moon, Sun } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-export default function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
+const ThemeToggle = () => {
+  const { isDark, toggleTheme } = useTheme();
 
   return (
-    <button
-      onClick={() => setDark(!dark)}
-      className="absolute top-4 right-4 text-sm px-3 py-1 rounded bg-zinc-200 dark:bg-zinc-700"
+    <motion.button
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={toggleTheme}
+      className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-yellow-600 dark:text-yellow-400 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      aria-label="Toggle theme"
     >
-      {dark ? "☀️ Claro" : "🌙 Escuro"}
-    </button>
+      {isDark ? <Sun size={20} /> : <Moon size={20} />}
+    </motion.button>
   );
-}
+};
+
+export default ThemeToggle;

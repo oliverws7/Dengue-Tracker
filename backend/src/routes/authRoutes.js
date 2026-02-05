@@ -138,6 +138,7 @@ router.get('/profile', authenticateToken, authController.perfil);
 router.put(
   '/perfil',
   authenticateToken,
+  authLimiter, // Adicionar rate limit para prevenir abuso
   validate(schemas.user.atualizarPerfil),
   authController.atualizarPerfil
 );
@@ -146,6 +147,7 @@ router.put(
 router.put(
   '/alterar-senha',
   authenticateToken,
+  authLimiter, // Adicionar rate limit para prevenir abuso
   validate(schemas.user.alterarSenha),
   authController.alterarSenha
 );

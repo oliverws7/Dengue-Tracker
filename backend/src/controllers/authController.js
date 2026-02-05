@@ -7,6 +7,28 @@ const authController = {
         try {
             const { nome, email, senha, role } = req.body;
             
+            // Validações obrigatórias
+            if (!nome || !nome.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Nome é obrigatório'
+                });
+            }
+            
+            if (!email || !email.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email é obrigatório'
+                });
+            }
+            
+            if (!senha || senha.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Senha deve ter no mínimo 6 caracteres'
+                });
+            }
+            
             // Verificar se email já existe
             const usuarioExistente = await User.findOne({ email });
             if (usuarioExistente) {
@@ -60,8 +82,23 @@ const authController = {
         try {
             const { email, senha } = req.body;
             
-            // Buscar usuário
-            const usuario = await User.findOne({ email });
+            // Validações obrigatórias
+            if (!email || !email.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email é obrigatório'
+                });
+            }
+            
+            if (!senha) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Senha é obrigatória'
+                });
+            }
+            
+            // Buscar usuário COM senha (select('+senha') porque tem select: false no modelo)
+            const usuario = await User.findOne({ email }).select('+senha');
             if (!usuario) {
                 return res.status(401).json({
                     success: false,
@@ -222,10 +259,5 @@ const authController = {
     }
 };
 
-// Exportar o objeto controller E os aliases de compatibilidade corretamente
-module.exports = {
-    ...authController,
-    register: authController.registrar,
-    login: authController.login,
-    getProfile: authController.perfil
-};
+// Exportar apenas o objeto principal com nomes em português
+module.exports = authController;

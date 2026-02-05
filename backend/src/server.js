@@ -2,7 +2,6 @@
 const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const path = require('path');
 const socketIo = require('socket.io');
 const helmet = require('helmet');
@@ -22,6 +21,7 @@ validateEnv();
 
 // Configurações e Middlewares Personalizados
 const { generalLimiter } = require('./middleware/rateLimit');
+const corsMiddleware = require('./middleware/cors');
 const healthCheck = require('./middleware/health');
 
 // Inicialização
@@ -34,7 +34,7 @@ const server = http.createServer(app);
 app.use(helmet({ 
   crossOriginResourcePolicy: false 
 }));
-app.use(cors({ origin: true, credentials: true })); 
+app.use(corsMiddleware);
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -108,17 +108,32 @@ mongoose.connect(process.env.MONGODB_URI)
 // ======================
 const io = socketIo(server, {
   cors: {
-    origin: "*", 
-    methods: ["GET", "POST"]
+    origin: process.env.SOCKET_IO_CORS_ORIGIN || process.env.CORS_ORIGIN || 'http://localhost:5173',
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 const { validateSocketToken } = require('./config/jwt'); 
 io.use(async (socket, next) => {
-  if (socket.handshake.auth && socket.handshake.auth.token) {
-    next();
-  } else {
-    next(); 
+  const token = socket.handshake.auth?.token;
+  
+  if (!token) {
+    socket.isAuthenticated = false;
+    return next();
+  }
+  
+  try {
+    const result = await validateSocketToken(token);
+    if (result.valid) {
+      socket.userId = result.userId;
+      socket.isAuthenticated = true;
+      next();
+    } else {
+      next(new Error('Token inválido'));
+    }
+  } catch (err) {
+    next(new Error('Erro ao validar token'));
   }
 });
 

@@ -1,99 +1,189 @@
-import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import illustration from "../assets/login-illustration.svg";
-import ThemeToggle from "../components/ThemeToggle";
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { motion } from 'framer-motion';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import Card from '../components/Card';
 
-const schema = z.object({
-  email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "Mínimo 6 caracteres"),
-});
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const toast = useToast();
 
-export default function Login() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({ resolver: zodResolver(schema) });
+  const validate = () => {
+    const newErrors = {};
+    if (!email) newErrors.email = 'Email é obrigatório';
+    if (!password) newErrors.password = 'Senha é obrigatória';
+    return newErrors;
+  };
 
-  function onSubmit(data) {
-    console.log(data);
-  }
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const newErrors = validate();
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { token, data } = response.data;
+      
+      login(token, data.usuario || data);
+      toast.success('Login realizado com sucesso!');
+      navigate('/dashboard');
+    } catch (err) {
+      const message = err.response?.data?.message || 'Falha no login. Verifique suas credenciais.';
+      toast.error(message);
+      setErrors({ submit: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-zinc-900 transition-colors">
-      <ThemeToggle />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 flex items-center justify-center px-4 py-12">
+      {/* Background decorations */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-200/20 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
 
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-5xl bg-white dark:bg-zinc-800 rounded-2xl shadow-xl grid grid-cols-1 md:grid-cols-2 overflow-hidden"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="w-full max-w-md z-10"
       >
-        {/* LADO ESQUERDO */}
-        <div className="hidden md:flex items-center justify-center bg-emerald-900 p-8">
-          <img src={illustration} alt="Login" className="max-w-sm" />
-        </div>
-
-        {/* LADO DIREITO */}
-        <div className="p-10">
-          <h1 className="text-3xl font-bold text-zinc-800 dark:text-white">
-            Login
+        {/* Header */}
+        <motion.div variants={itemVariants} className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center text-4xl shadow-lg">
+              🦟
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+            DengueTracker
           </h1>
-          <p className="text-zinc-500 mb-6">
-            Bem-vindo de volta 👋
+          <p className="text-gray-600 dark:text-gray-400">
+            Faça login para gerenciar seus relatórios
           </p>
+        </motion.div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <input
-                {...register("email")}
-                placeholder="Seu e-mail"
-                className="w-full px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-white outline-none"
+        {/* Form Card */}
+        <Card variant="white" className="p-8">
+          <form onSubmit={handleLogin} className="space-y-6">
+            {errors.submit && (
+              <motion.div
+                variants={itemVariants}
+                className="p-4 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium"
+              >
+                {errors.submit}
+              </motion.div>
+            )}
+
+            <motion.div variants={itemVariants}>
+              <Input
+                label="Email"
+                type="email"
+                icon={Mail}
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: '' });
+                }}
+                error={errors.email}
               />
-              {errors.email && (
-                <span className="text-red-500 text-sm">
-                  {errors.email.message}
-                </span>
-              )}
-            </div>
+            </motion.div>
 
-            <div>
-              <input
-                type="password"
-                {...register("password")}
-                placeholder="Sua senha"
-                className="w-full px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-white outline-none"
-              />
-              {errors.password && (
-                <span className="text-red-500 text-sm">
-                  {errors.password.message}
-                </span>
-              )}
-            </div>
+            <motion.div variants={itemVariants}>
+              <div className="relative">
+                <Input
+                  label="Senha"
+                  type={showPassword ? "text" : "password"}
+                  icon={Lock}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors({ ...errors, password: '' });
+                  }}
+                  error={errors.password}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-[2.3rem] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </motion.div>
 
-            <div className="text-right text-sm">
-              <a href="#" className="text-emerald-600 hover:underline">
-                Esqueceu a senha?
-              </a>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 transition rounded-lg text-white font-semibold"
-            >
-              Entrar no sistema
-            </button>
+            <motion.div variants={itemVariants}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                isLoading={loading}
+                disabled={loading}
+              >
+                {loading ? 'Entrando...' : 'Entrar'}
+              </Button>
+            </motion.div>
           </form>
 
-          <p className="mt-6 text-sm text-zinc-500">
-            Novo por aqui?{" "}
-            <a href="#" className="text-emerald-600 font-semibold">
-              Crie sua conta
-            </a>
-          </p>
-        </div>
+          <motion.div variants={itemVariants} className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
+              Ainda não tem uma conta?{' '}
+              <Link
+                to="/register"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              >
+                Cadastre-se aqui
+              </Link>
+            </p>
+          </motion.div>
+        </Card>
+
+        {/* Footer */}
+        <motion.p
+          variants={itemVariants}
+          className="text-center text-gray-500 dark:text-gray-500 text-xs mt-6"
+        >
+          Protegido por encriptação de ponta a ponta
+        </motion.p>
       </motion.div>
     </div>
   );
-}
+};
+
+export default Login;
