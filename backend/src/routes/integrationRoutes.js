@@ -1,15 +1,25 @@
-// src/routes/integrationRoutes.js
 const express = require('express');
 const router = express.Router();
 const Report = require('../models/Report');
 const { apiLimiter } = require('../middleware/rateLimit');
 
-// Middleware de segurança para API Key (Simples)
+// ======================
+// DOCUMENTAÇÃO SWAGGER (TAGS)
+// ======================
+/**
+ * @openapi
+ * tags:
+ *   - name: IntegracaoExterna
+ *     description: Endpoints públicos para integração via API Key
+ */
+
+// ======================
+// SEGURANÇA (API KEY)
+// ======================
 const requireApiKey = (req, res, next) => {
   const apiKey = req.header('x-api-key');
-  // Em produção, use process.env.EXTERNAL_API_KEY
   const validKey = process.env.EXTERNAL_API_KEY || 'chave-padrao-dev';
-  
+
   if (!apiKey || apiKey !== validKey) {
     return res.status(401).json({
       success: false,
@@ -17,18 +27,37 @@ const requireApiKey = (req, res, next) => {
       code: 'INVALID_API_KEY'
     });
   }
+
   next();
 };
 
-// Aplica Rate Limit e Validação de Key
+// Aplica Rate Limit e API Key
 router.use(apiLimiter);
 router.use(requireApiKey);
 
-// 1. Estatísticas Gerais
+// ======================
+// ESTATÍSTICAS GERAIS
+// ======================
+/**
+ * @openapi
+ * /api/external/stats:
+ *   get:
+ *     tags:
+ *       - IntegracaoExterna
+ *     summary: Retorna estatísticas públicas do sistema
+ *     responses:
+ *       200:
+ *         description: Estatísticas retornadas com sucesso
+ *       401:
+ *         description: API Key inválida
+ */
 router.get('/stats', async (req, res) => {
   try {
     const totalReports = await Report.countDocuments({ isPublic: true });
-    const resolvedCases = await Report.countDocuments({ status: 'eliminado', isPublic: true });
+    const resolvedCases = await Report.countDocuments({
+      status: 'eliminado',
+      isPublic: true
+    });
 
     res.json({
       success: true,
@@ -43,7 +72,33 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// 2. Feed de Relatórios (Paginação)
+// ======================
+// FEED DE RELATÓRIOS
+// ======================
+/**
+ * @openapi
+ * /api/external/reports:
+ *   get:
+ *     tags:
+ *       - IntegracaoExterna
+ *     summary: Retorna relatórios públicos com paginação
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Lista de relatórios retornada
+ *       401:
+ *         description: API Key inválida
+ */
 router.get('/reports', async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 10, 50);
@@ -59,7 +114,12 @@ router.get('/reports', async (req, res) => {
 
     res.json({
       success: true,
-      data: reports
+      data: reports,
+      pagination: {
+        page,
+        limit,
+        total: reports.length
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Erro interno' });

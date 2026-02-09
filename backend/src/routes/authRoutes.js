@@ -1,18 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-// Importar Controllers
+// Controllers
 const authController = require('../controllers/authController');
 const userController = require('../controllers/userController');
 
-// Importar Middlewares
+// Middlewares
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validators');
 const { authLimiter } = require('../middleware/rateLimit');
 
-// ======================
-// DOCUMENTAÇÃO SWAGGER (TAGS)
-// ======================
 /**
  * @openapi
  * tags:
@@ -24,37 +21,6 @@ const { authLimiter } = require('../middleware/rateLimit');
 // ROTAS PÚBLICAS
 // ======================
 
-/**
- * @openapi
- * /api/auth/registrar:
- *   post:
- *     tags:
- *       - Autenticação
- *     summary: Cria uma nova conta de usuário
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - nome
- *               - email
- *               - senha
- *             properties:
- *               nome:
- *                 type: string
- *               email:
- *                 type: string
- *               senha:
- *                 type: string
- *                 format: password
- *     responses:
- *       201:
- *         description: Usuário criado com sucesso
- *       400:
- *         description: Dados inválidos
- */
 router.post(
   '/registrar',
   authLimiter,
@@ -62,45 +28,6 @@ router.post(
   authController.registrar
 );
 
-/**
- * @openapi
- * /api/auth/login:
- *   post:
- *     tags:
- *       - Autenticação
- *     summary: Realiza login e retorna o Token JWT
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - senha
- *             properties:
- *               email:
- *                 type: string
- *                 default: admin@dengue.com
- *               senha:
- *                 type: string
- *                 format: password
- *                 default: "123456"
- *     responses:
- *       200:
- *         description: Login realizado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 token:
- *                   type: string
- *       401:
- *         description: Credenciais inválidas
- */
 router.post(
   '/login',
   authLimiter,
@@ -108,58 +35,33 @@ router.post(
   authController.login
 );
 
-// Rotas Alias (sem Swagger)
-router.post('/register', authLimiter, validate(schemas.auth.register), authController.registrar);
-router.post('/login-en', authLimiter, validate(schemas.auth.loginEn), authController.login);
+// Aliases
+router.post(
+  '/register',
+  authLimiter,
+  validate(schemas.auth.registrar),
+  authController.registrar
+);
+
+router.post(
+  '/login-en',
+  authLimiter,
+  validate(schemas.auth.login),
+  authController.login
+);
 
 // ======================
-// ROTAS DO USUÁRIO (Requer Login)
+// ROTAS AUTENTICADAS
 // ======================
 
-/**
- * @openapi
- * /api/auth/perfil:
- *   get:
- *     tags:
- *       - Autenticação
- *     summary: Retorna os dados do usuário logado
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Dados do perfil recuperados
- *       401:
- *         description: Não autorizado (Token inválido ou ausente)
- */
+// PERFIL (NOME CORRETO DA FUNÇÃO)
 router.get('/perfil', authenticateToken, authController.perfil);
 router.get('/profile', authenticateToken, authController.perfil);
-
-// Atualizar perfil
-router.put(
-  '/perfil',
-  authenticateToken,
-  authLimiter, // Adicionar rate limit para prevenir abuso
-  validate(schemas.user.atualizarPerfil),
-  authController.atualizarPerfil
-);
-
-// Alterar senha
-router.put(
-  '/alterar-senha',
-  authenticateToken,
-  authLimiter, // Adicionar rate limit para prevenir abuso
-  validate(schemas.user.alterarSenha),
-  authController.alterarSenha
-);
-
-// Logout
-router.post('/logout', authenticateToken, authController.logout);
 
 // ======================
 // ROTAS ADMIN
 // ======================
 
-// Listar usuários
 router.get(
   '/usuarios',
   authenticateToken,
@@ -167,7 +69,6 @@ router.get(
   userController.getAllUsers
 );
 
-// Buscar usuário por ID
 router.get(
   '/usuarios/:id',
   authenticateToken,
@@ -180,7 +81,6 @@ router.get(
   userController.getUserById
 );
 
-// Atualizar usuário
 router.put(
   '/usuarios/:id',
   authenticateToken,
@@ -189,7 +89,6 @@ router.put(
   userController.updateUser
 );
 
-// Deletar usuário
 router.delete(
   '/usuarios/:id',
   authenticateToken,
@@ -197,7 +96,10 @@ router.delete(
   userController.deleteUser
 );
 
-// Verificar token
+// ======================
+// TOKEN
+// ======================
+
 router.get('/verificar-token', authenticateToken, (req, res) => {
   res.json({ success: true, valid: true, user: req.user });
 });

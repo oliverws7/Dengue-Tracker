@@ -178,13 +178,17 @@ app.get("/", (req, res) => {
 // Health Check
 app.use('/health', healthCheck);
 
-// Importação das Rotas Modulares
+// ======================
+// 6. DEFINIÇÃO DE ROTAS
+// ======================
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/reports', require('./routes/reportRoutes')); 
+app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/gamification', require('./routes/gamificationRoutes'));
 app.use('/api/integrations', require('./routes/integrationRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/external', require('./routes/externalRoutes'));
 
 // ======================
 // 7. TRATAMENTO DE ERROS GLOBAIS

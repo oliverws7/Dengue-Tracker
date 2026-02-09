@@ -3,12 +3,46 @@ const router = express.Router();
 const Report = require('../models/Report');
 const { apiLimiter } = require('../middleware/rateLimit');
 
-// Middleware de segurança para API Key
+// ======================
+// DOCUMENTAÇÃO SWAGGER (TAGS)
+// ======================
+/**
+ * @openapi
+ * tags:
+ *   - name: Gamificacao
+ *     description: Sistema de ranking e pontuação
+ *   - name: IntegracaoExterna
+ *     description: Endpoints públicos para integração externa
+ */
+
+// ======================
+// GAMIFICATION
+// ======================
+/**
+ * @openapi
+ * /api/gamification/ranking:
+ *   get:
+ *     tags:
+ *       - Gamificacao
+ *     summary: Retorna o ranking global
+ *     responses:
+ *       200:
+ *         description: Ranking retornado com sucesso
+ */
+router.get('/ranking', (req, res) => {
+  res.json({
+    success: true,
+    ranking: []
+  });
+});
+
+// ======================
+// SEGURANÇA (API KEY)
+// ======================
 const requireApiKey = (req, res, next) => {
   const apiKey = req.header('x-api-key');
-  // Defina EXTERNAL_API_KEY no seu arquivo .env
   const validKey = process.env.EXTERNAL_API_KEY || 'chave-segura-padrao-dev';
-  
+
   if (!apiKey || apiKey !== validKey) {
     return res.status(401).json({
       success: false,
@@ -16,28 +50,41 @@ const requireApiKey = (req, res, next) => {
       code: 'INVALID_API_KEY'
     });
   }
+
   next();
 };
 
-// Aplica Rate Limit e Validação de Key em todas as rotas abaixo
+// Aplica Rate Limit + API Key
 router.use(apiLimiter);
 router.use(requireApiKey);
 
-// 1. Estatísticas Gerais (Dados Reais)
+// ======================
+// INTEGRAÇÃO EXTERNA
+// ======================
+
+/**
+ * @openapi
+ * /api/external/stats:
+ *   get:
+ *     tags:
+ *       - IntegracaoExterna
+ *     summary: Retorna estatísticas públicas do sistema
+ *     responses:
+ *       200:
+ *         description: Estatísticas retornadas com sucesso
+ */
 router.get('/stats', async (req, res) => {
   try {
     const totalReports = await Report.countDocuments({ isPublic: true });
-    
-    // Casos considerados "ativos" (não eliminados)
-    const activeCases = await Report.countDocuments({ 
+
+    const activeCases = await Report.countDocuments({
       status: { $in: ['pendente', 'confirmado', 'investigando'] },
-      isPublic: true 
+      isPublic: true
     });
 
-    // Casos resolvidos
-    const resolvedCases = await Report.countDocuments({ 
+    const resolvedCases = await Report.countDocuments({
       status: 'eliminado',
-      isPublic: true 
+      isPublic: true
     });
 
     res.json({
@@ -47,30 +94,47 @@ router.get('/stats', async (req, res) => {
         activeCases,
         resolvedCases,
         lastUpdate: new Date()
-      },
-      message: 'Estatísticas em tempo real recuperadas com sucesso'
+      }
     });
   } catch (error) {
-    console.error('Erro na integração /stats:', error);
+    console.error('Erro /stats:', error);
     res.status(500).json({ success: false, error: 'Erro interno no servidor' });
   }
 });
 
-// 2. Feed de Relatórios (Dados Reais com Paginação)
+/**
+ * @openapi
+ * /api/external/reports:
+ *   get:
+ *     tags:
+ *       - IntegracaoExterna
+ *     summary: Retorna relatórios públicos com paginação
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Lista de relatórios retornada
+ */
 router.get('/reports', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
     const skip = (page - 1) * limit;
 
-    // Proteção: Limite máximo de 100 itens por requisição externa
-    const safeLimit = Math.min(limit, 100);
-
     const reports = await Report.find({ isPublic: true })
-      .select('localizacao tipoCriadouro status nivelRisco dataOcorrencia cidade bairro -_id') // Seleciona apenas campos públicos e seguros
-      .sort({ createdAt: -1 }) // Mais recentes primeiro
+      .select('localizacao tipoCriadouro status nivelRisco dataOcorrencia cidade bairro -_id')
+      .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(safeLimit)
+      .limit(limit)
       .lean();
 
     const total = await Report.countDocuments({ isPublic: true });
@@ -80,13 +144,13 @@ router.get('/reports', async (req, res) => {
       data: reports,
       pagination: {
         page,
-        limit: safeLimit,
+        limit,
         total,
-        totalPages: Math.ceil(total / safeLimit)
+        totalPages: Math.ceil(total / limit)
       }
     });
   } catch (error) {
-    console.error('Erro na integração /reports:', error);
+    console.error('Erro /reports:', error);
     res.status(500).json({ success: false, error: 'Erro interno no servidor' });
   }
 });
