@@ -8,6 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -15,20 +16,19 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
+      // 1. Aguarda o login salvar o token no localStorage
       await login(email, password);
-      navigate('/dashboard');
-    } catch (error) {
-      setError(error.message || 'Erro ao fazer login. Tente novamente.');
+      
+      // 2. Redireciona DIRETAMENTE para o dashboard
+      navigate('/dashboard'); 
+    } catch (err) {
+      setError('Falha no login. Verifique suas credenciais.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoLogin = () => {
-    setEmail('admin@denguetracker.com');
-    setPassword('admin123');
   };
 
   return (
@@ -36,64 +36,39 @@ const Login = () => {
       <div className="login-card">
         <div className="login-header">
           <div className="logo-icon">🦟</div>
-          <h1>Dengue Tracker</h1>
-          <p className="subtitle">Sistema de Monitoramento de Casos de Dengue</p>
+          <h2>Dengue Tracker</h2>
+          <p>Sistema de Monitoramento</p>
         </div>
-        
-        <form onSubmit={handleSubmit} className="login-form">
-          {error && <div className="error-message">{error}</div>}
-          
+
+        {error && <div className="error-message">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">E-mail</label>
+            <label>Email</label>
             <input
               type="email"
-              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
+              placeholder="admin@dengue.com"
               required
-              disabled={loading}
             />
           </div>
-          
+
           <div className="form-group">
-            <label htmlFor="password">Senha</label>
+            <label>Senha</label>
             <input
               type="password"
-              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="******"
               required
-              disabled={loading}
             />
           </div>
-          
-          <button 
-            type="submit" 
-            className="login-button"
-            disabled={loading}
-          >
-            {loading ? 'Entrando...' : 'Entrar'}
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Entrando...' : 'Acessar Sistema'}
           </button>
-          
-          <div className="demo-section">
-            <p>Use credenciais de demonstração:</p>
-            <button 
-              type="button" 
-              className="demo-button"
-              onClick={handleDemoLogin}
-              disabled={loading}
-            >
-              admin@denguetracker.com / admin123
-            </button>
-          </div>
         </form>
-        
-        <div className="login-footer">
-          <p>© 2024 Dengue Tracker - Saúde Pública</p>
-          <p className="version">Versão 1.0.0</p>
-        </div>
       </div>
     </div>
   );

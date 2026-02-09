@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Interceptor para adicionar token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('dengue-tracker-token');
@@ -18,12 +17,9 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor para tratamento de erros
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -36,6 +32,8 @@ api.interceptors.response.use(
   }
 );
 
+// --- EXPORTAÇÕES (Verifique se estão todas aqui) ---
+
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   register: (userData) => api.post('/auth/register', userData),
@@ -43,22 +41,24 @@ export const authAPI = {
   profile: () => api.get('/auth/profile'),
 };
 
+// ATENÇÃO: Deve ser '/reports' para funcionar com o seu server.js
 export const casesAPI = {
-  getAll: (params) => api.get('/cases', { params }),
-  getById: (id) => api.get(`/cases/${id}`),
-  create: (data) => api.post('/cases', data),
-  update: (id, data) => api.put(`/cases/${id}`, data),
-  delete: (id) => api.delete(`/cases/${id}`),
-  getStats: () => api.get('/cases/stats'),
-  getTimeline: () => api.get('/cases/timeline'),
-  getByRegion: () => api.get('/cases/regions'),
+  getAll: (params) => api.get('/reports', { params }),
+  getById: (id) => api.get(`/reports/${id}`),
+  create: (data) => api.post('/reports', data),
+  update: (id, data) => api.put(`/reports/${id}`, data),
+  delete: (id) => api.delete(`/reports/${id}`),
+  getStats: () => api.get('/reports/stats'),
+  getTimeline: () => api.get('/reports/timeline'),
+  getByRegion: () => api.get('/reports/regions'),
 };
 
 export const reportsAPI = {
-  generate: (data) => api.post('/reports', data),
+  generate: (data) => api.post('/reports/export', data),
   download: (id) => api.get(`/reports/${id}/download`, { responseType: 'blob' }),
 };
 
+// Esta é a exportação que estava faltando e causava o erro no NotificationContext
 export const notificationsAPI = {
   getAll: () => api.get('/notifications'),
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
