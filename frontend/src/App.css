@@ -40,19 +40,3 @@
 .read-the-docs {
   color: #888;
 }
-
-/* Mantenha o que já existe e adicione: */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f5f5;
-}
-
-.App {
-  min-height: 100vh;
-}

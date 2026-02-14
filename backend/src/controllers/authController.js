@@ -1,263 +1,324 @@
-const User = require('../models/User');
-const { gerarToken } = require('../config/jwt');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const { User, PasswordReset } = require('../models');
+const jwtConfig = require('../config/jwt');
+const { sendVerificationEmail, sendPasswordResetCode, sendNewPasswordEmail } = require('../services/emailService');
+const { Op } = require('sequelize');
 
-const authController = {
-    // Registrar novo usuário
-    registrar: async (req, res) => {
-        try {
-            const { nome, email, senha, role } = req.body;
-            
-            // Validações obrigatórias
-            if (!nome || !nome.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Nome é obrigatório'
-                });
-            }
-            
-            if (!email || !email.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email é obrigatório'
-                });
-            }
-            
-            if (!senha || senha.length < 6) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Senha deve ter no mínimo 6 caracteres'
-                });
-            }
-            
-            // Verificar se email já existe
-            const usuarioExistente = await User.findOne({ email });
-            if (usuarioExistente) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email já está em uso'
-                });
-            }
-            
-            // Criar novo usuário
-            const novoUsuario = new User({
-                nome,
-                email,
-                senha,
-                role: role || 'user'
-            });
-            
-            await novoUsuario.save();
-            
-            // Gerar token
-            const token = gerarToken(novoUsuario._id, novoUsuario.role);
-            
-            res.status(201).json({
-                success: true,
-                message: 'Usuário registrado com sucesso',
-                data: {
-                    usuario: {
-                        id: novoUsuario._id,
-                        nome: novoUsuario.nome,
-                        email: novoUsuario.email,
-                        role: novoUsuario.role,
-                        nivel: novoUsuario.nivel,
-                        pontos: novoUsuario.pontos
-                    },
-                    token
-                }
-            });
-            
-        } catch (error) {
-            console.error('Erro no registro:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erro ao registrar usuário',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    },
-    
-    // Login de usuário
-    login: async (req, res) => {
-        try {
-            const { email, senha } = req.body;
-            
-            // Validações obrigatórias
-            if (!email || !email.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email é obrigatório'
-                });
-            }
-            
-            if (!senha) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Senha é obrigatória'
-                });
-            }
-            
-            // Buscar usuário COM senha (select('+senha') porque tem select: false no modelo)
-            const usuario = await User.findOne({ email }).select('+senha');
-            if (!usuario) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Credenciais inválidas'
-                });
-            }
-            
-            // Verificar se conta está ativa
-            if (!usuario.ativo) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Conta desativada. Entre em contato com o administrador.'
-                });
-            }
-            
-            // Verificar senha
-            const senhaValida = await usuario.compararSenha(senha);
-            if (!senhaValida) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Credenciais inválidas'
-                });
-            }
-            
-            // Atualizar último login
-            usuario.ultimoLogin = new Date();
-            await usuario.save();
-            
-            // Gerar token
-            const token = gerarToken(usuario._id, usuario.role);
-            
-            res.json({
-                success: true,
-                message: 'Login realizado com sucesso',
-                data: {
-                    usuario: {
-                        id: usuario._id,
-                        nome: usuario.nome,
-                        email: usuario.email,
-                        role: usuario.role,
-                        nivel: usuario.nivel,
-                        pontos: usuario.pontos
-                    },
-                    token
-                }
-            });
-            
-        } catch (error) {
-            console.error('Erro no login:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erro ao fazer login',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    },
-    
-    // Perfil do usuário logado
-    perfil: async (req, res) => {
-        try {
-            const usuario = await User.findById(req.user.id)
-                .select('-senha -__v');
-            
-            if (!usuario) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Usuário não encontrado'
-                });
-            }
-            
-            res.json({
-                success: true,
-                data: usuario
-            });
-            
-        } catch (error) {
-            console.error('Erro ao buscar perfil:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erro ao buscar perfil',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    },
-    
-    // Atualizar perfil
-    atualizarPerfil: async (req, res) => {
-        try {
-            const { nome, email } = req.body;
-            const camposParaAtualizar = {};
-            
-            if (nome) camposParaAtualizar.nome = nome;
-            if (email) camposParaAtualizar.email = email;
-            
-            const usuarioAtualizado = await User.findByIdAndUpdate(
-                req.user.id,
-                camposParaAtualizar,
-                { new: true, runValidators: true }
-            ).select('-senha -__v');
-            
-            res.json({
-                success: true,
-                message: 'Perfil atualizado com sucesso',
-                data: usuarioAtualizado
-            });
-            
-        } catch (error) {
-            console.error('Erro ao atualizar perfil:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erro ao atualizar perfil',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    },
-    
-    // Alterar senha
-    alterarSenha: async (req, res) => {
-        try {
-            const { senhaAtual, novaSenha } = req.body;
-            
-            const usuario = await User.findById(req.user.id);
-            
-            // Verificar senha atual
-            const senhaValida = await usuario.compararSenha(senhaAtual);
-            if (!senhaValida) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Senha atual incorreta'
-                });
-            }
-            
-            // Atualizar senha
-            usuario.senha = novaSenha;
-            await usuario.save();
-            
-            res.json({
-                success: true,
-                message: 'Senha alterada com sucesso'
-            });
-            
-        } catch (error) {
-            console.error('Erro ao alterar senha:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erro ao alterar senha',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    },
-    
-    // Logout (cliente deve remover token)
-    logout: (req, res) => {
-        res.json({
-            success: true,
-            message: 'Logout realizado com sucesso'
-        });
-    }
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+const generateToken = (id) => {
+  return jwt.sign({ id }, jwtConfig.secret, {
+    expiresIn: jwtConfig.expiresIn
+  });
 };
 
-// Exportar apenas o objeto principal com nomes em português
-module.exports = authController;
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Por favor, forneça email e senha'
+      });
+    }
+
+    const user = await User.scope('withPassword').findOne({ 
+      where: { email } 
+    });
+
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Email ou senha incorretos'
+      });
+    }
+
+    if (!user.verified) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Por favor, verifique seu email antes de fazer login'
+      });
+    }
+
+    const token = generateToken(user.id);
+
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+
+    res.status(200).json({
+      status: 'success',
+      token,
+      data: {
+        user: userResponse
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.protect = async (req, res, next) => {
+  try {
+    let token;
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Você não está autenticado. Por favor, faça login'
+      });
+    }
+
+    const decoded = jwt.verify(token, jwtConfig.secret);
+
+    const currentUser = await User.findByPk(decoded.id);
+    if (!currentUser) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'O usuário associado a este token não existe mais'
+      });
+    }
+
+    req.user = currentUser;
+    next();
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Token inválido. Por favor, faça login novamente'
+      });
+    } else if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Seu token expirou. Por favor, faça login novamente'
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    const user = await User.findOne({
+      where: {
+        verificationToken: token,
+        verificationTokenExpires: { 
+          [Op.gt]: new Date() 
+        }
+      }
+    });
+    
+    if (!user) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Token de verificação inválido ou expirado'
+      });
+    }
+    
+    user.verified = true;
+    user.verificationToken = null;
+    user.verificationTokenExpires = null;
+    await user.save();
+    
+    res.redirect(`${FRONTEND_URL}/?verified=true`);
+    
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Por favor, forneça um email'
+      });
+    }
+    
+    const user = await User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Usuário não encontrado'
+      });
+    }
+    
+    if (user.verified) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Este email já foi verificado'
+      });
+    }
+    
+    const verificationToken = user.generateVerificationToken();
+    await user.save();
+    
+    await sendVerificationEmail(user.email, user.name, verificationToken);
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Email de verificação reenviado com sucesso'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+const generateResetCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const generateRandomPassword = () => {
+  const length = 10;
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+  let password = '';
+  
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    password += charset[randomIndex];
+  }
+  
+  return password;
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Por favor, forneça um email'
+      });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Não existe uma conta com este email'
+      });
+    }
+
+    if (!user.verified) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Sua conta ainda não foi verificada. Por favor, verifique seu email antes de redefinir sua senha'
+      });
+    }
+
+    const resetCode = generateResetCode();
+    
+    await PasswordReset.update(
+      { used: true },
+      { 
+        where: { 
+          email: user.email, 
+          used: false 
+        } 
+      }
+    );
+    
+    await PasswordReset.create({
+      email: user.email,
+      resetCode: resetCode,
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000)
+    });
+
+    await sendPasswordResetCode(user.email, user.name, resetCode);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Código de recuperação de senha enviado com sucesso para seu email'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, resetCode } = req.body;
+
+    if (!email || !resetCode) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Por favor, forneça email e código de recuperação'
+      });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Não existe uma conta com este email'
+      });
+    }
+
+    const passwordReset = await PasswordReset.findOne({
+      where: {
+        email: user.email,
+        resetCode: resetCode,
+        used: false
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (!passwordReset || !passwordReset.isValid()) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Código de recuperação inválido ou expirado'
+      });
+    }
+
+    const newPassword = generateRandomPassword();
+
+    user.password = newPassword;
+    await user.save();
+
+    passwordReset.used = true;
+    await passwordReset.save();
+
+    await sendNewPasswordEmail(user.email, user.name, newPassword);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Senha redefinida com sucesso. Verifique seu email para a nova senha'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};

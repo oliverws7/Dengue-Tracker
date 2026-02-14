@@ -1,0 +1,49 @@
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    cursor: pointer;
+  }
+  
+  .switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .switch-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e2e8f0;
+    border-radius: 20px;
+    transition: 0.2s;
+  }
+  
+  .switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  
+  .switch-input:checked + .switch-track {
+    background-color: #3b82f6;
+  }
+  
+  .switch-input:checked + .switch-track .switch-thumb {
+    transform: translateX(16px);
+  }
+  
+  .switch-input:focus + .switch-track {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  
+  
