@@ -12,6 +12,8 @@ node_modules
 dist
 dist-ssr
 *.local
+verify_users.js
+debug_users.js
 
 # Editor directories and files
 .vscode/*

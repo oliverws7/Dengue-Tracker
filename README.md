@@ -11,26 +11,29 @@ O **DengueTracker** é uma plataforma colaborativa de monitoramento e combate à
 
 A solução é estruturada em um ecossistema full-stack moderno:
 
-* **Backend:** API REST robusta em **Node.js** com persistência em **MongoDB**. Gerencia autenticação JWT, processamento de imagens (focos reportados) e lógica de gamificação (pontos e conquistas).
-* **Frontend:** Dashboard interativo construído com **React** e **Vite**, focado em visualização de dados em tempo real e experiência do usuário fluida.
+* **Backend**: API REST robusta em **Node.js** com persistência em **MongoDB**. Gerencia autenticação JWT, processamento de imagens via AWS S3, envio de e-mails e lógica de gamificação.
+* **Frontend**: Aplicação **React** com **TypeScript**, utilizando **Vite** para um desenvolvimento ágil e uma experiência de usuário fluida.
 
-### 📁 Estrutura de Pastas
+### 📁 Estrutura de Pastas Atualizada
 
 ```text
 .
 ├── backend/
 │   ├── src/
-│   │   ├── controllers/    # Lógica de controle das rotas
-│   │   ├── models/         # Definições de schemas (Mongoose)
-│   │   ├── routes/         # Definição dos endpoints
-│   │   └── middleware/     # Filtros de segurança e upload
-│   ├── migrations/         # Versionamento do banco de dados
-│   └── tests/              # Testes de API e WebSocket
+│   │   ├── config/         # Configurações de banco de dados, JWT e S3
+│   │   ├── controllers/    # Lógica de controle das rotas (Auth, User, Focus)
+│   │   ├── middlewares/    # Validações de schema e segurança
+│   │   ├── models/         # Definições de schemas Mongoose
+│   │   ├── routes/v1/      # Definição dos endpoints versionados
+│   │   └── services/       # Serviços auxiliares (ex: EmailService)
+│   └── tests/              # Testes de integração e serviços
 ├── frontend/
 │   ├── src/
-│   │   ├── components/     # Componentes reutilizáveis e mapas
-│   │   ├── contexts/       # Gerenciamento de estado (Auth/Theme)
-│   │   └── pages/          # Dashboards e telas principais
+│   │   ├── components/     # UI, Mapas e Modais
+│   │   ├── context/        # Gerenciamento de estado de Autenticação
+│   │   ├── hooks/          # Hooks customizados para estatísticas
+│   │   ├── pages/          # Telas de Home e Login
+│   │   └── types/          # Definições de tipos TypeScript
 └── README.md
 
 ```
@@ -41,10 +44,11 @@ A solução é estruturada em um ecossistema full-stack moderno:
 
 | Componente | Tecnologias |
 | --- | --- |
-| **Backend** | Node.js, Express, MongoDB (Mongoose), JWT, Multer |
-| **Frontend** | React, Vite, CSS Modules, Context API |
-| **Real-time** | WebSockets (integração para alertas em tempo real) |
-| **DevOps** | Migrate-mongo, ESLint |
+| **Linguagens** | JavaScript (ES6+), TypeScript |
+| **Backend** | Node.js, Express, MongoDB (Mongoose), JWT |
+| **Frontend** | React 18, Vite, CSS Modules, Context API |
+| **Serviços Cloud** | AWS S3 (Armazenamento de fotos), Nodemailer |
+| **Qualidade** | ESLint, Prettier, Vitest/Jest |
 
 ---
 
@@ -52,18 +56,17 @@ A solução é estruturada em um ecossistema full-stack moderno:
 
 ### 1. Pré-requisitos
 
-* Node.js (v16+)
+* Node.js (v18+)
 * MongoDB (Local ou Atlas)
-* Git instalado
+* Conta AWS (para S3) e serviço de SMTP (para e-mails)
 
 ### 2. Configuração do Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env # Configure suas chaves e URI do MongoDB
-npm run migrate      # Aplica o schema inicial ao banco
-npm run dev          # Inicia em modo de desenvolvimento
+# Configure o .env com MONGODB_URI, JWT_SECRET, AWS_ACCESS_KEY, etc.
+npm run dev
 
 ```
 
@@ -78,28 +81,27 @@ npm run dev
 
 ---
 
-## 🔌 Principais Endpoints (v2.1)
+## 🔌 Principais Endpoints (v1.0)
 
 | Método | Rota | Descrição | Protegido |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth/register` | Cadastro de novos usuários | ❌ |
-| `POST` | `/api/auth/login` | Login e geração de token JWT | ❌ |
-| `POST` | `/api/reports` | Envio de novo foco (com foto) | ✅ |
-| `GET` | `/api/gamification` | Ranking e status de conquistas | ✅ |
-| `GET` | `/api/public/stats` | Dados consolidados para o mapa | ❌ |
+| `POST` | `/api/v1/auth/register` | Cadastro de novos usuários | ❌ |
+| `POST` | `/api/v1/auth/login` | Login e geração de token JWT | ❌ |
+| `POST` | `/api/v1/dengue-focus` | Reportar novo foco do mosquito | ✅ |
+| `GET` | `/api/v1/dengue-focus` | Listar focos registrados para o mapa | ❌ |
+| `GET` | `/api/v1/users/profile` | Dados do perfil e pontuação | ✅ |
 
 ---
 
-## 🚀 Novidades Recentes
+## 🚀 Funcionalidades Implementadas
 
-* **Gamificação:** Novo sistema de missões e medalhas integrado ao perfil do usuário.
-* **Mapa Interativo:** Visualização aprimorada no frontend com filtros por densidade de focos.
-* **Segurança:** Implementação de *Rate Limiting* e validações rigorosas de schema no backend.
+* **Geolocalização**: Visualização de focos em mapa interativo.
+* **Recuperação de Senha**: Sistema de reset de senha via token por e-mail.
+* **Upload de Evidências**: Integração com AWS S3 para armazenamento de fotos dos focos.
+* **Segurança**: Proteção de rotas sensíveis e validação de dados com Middlewares.
 
 ---
 
 ## 📄 Licença
 
 Este projeto é open-source sob a licença [MIT](https://opensource.org/license/afl-3-0-php).
-
----
