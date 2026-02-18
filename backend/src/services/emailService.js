@@ -5,9 +5,9 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
   try {
     const BASE_URL = process.env.BASE_URL;
     const EMAIL_USER = process.env.EMAIL_USER;
-    const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+    const EMAIL_PASSWORD = process.env.EMAIL_PASS;
     const verificationUrl = `${BASE_URL}api/v1/auth/verify-email/${verificationToken}`;
-    
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -15,7 +15,7 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
         pass: EMAIL_PASSWORD
       }
     });
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -144,16 +144,16 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
       </body>
       </html>
     `;
-    
+
     const mailOptions = {
       from: `"Equipe Dengue Tracker" <${EMAIL_USER}>`,
       to: email,
       subject: '🦟 Confirme seu cadastro no Dengue Tracker',
       html: htmlContent
     };
-    
+
     const info = await transporter.sendMail(mailOptions);
-    
+
     console.log(`Email de verificação enviado para ${email}`, info.messageId);
     return true;
   } catch (error) {
@@ -165,8 +165,8 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
 const sendPasswordResetCode = async (email, name, resetCode) => {
   try {
     const EMAIL_USER = process.env.EMAIL_USER;
-    const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-    
+    const EMAIL_PASSWORD = process.env.EMAIL_PASS;
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -174,7 +174,7 @@ const sendPasswordResetCode = async (email, name, resetCode) => {
         pass: EMAIL_PASSWORD
       }
     });
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -287,16 +287,16 @@ const sendPasswordResetCode = async (email, name, resetCode) => {
       </body>
       </html>
     `;
-    
+
     const mailOptions = {
       from: `"Equipe Dengue Tracker" <${EMAIL_USER}>`,
       to: email,
       subject: '🔐 Recuperação de Senha - Dengue Tracker',
       html: htmlContent
     };
-    
+
     const info = await transporter.sendMail(mailOptions);
-    
+
     console.log(`Email de recuperação de senha enviado para ${email}`, info.messageId);
     return true;
   } catch (error) {
@@ -308,8 +308,8 @@ const sendPasswordResetCode = async (email, name, resetCode) => {
 const sendNewPasswordEmail = async (email, name, newPassword) => {
   try {
     const EMAIL_USER = process.env.EMAIL_USER;
-    const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-    
+    const EMAIL_PASSWORD = process.env.EMAIL_PASS;
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -317,7 +317,7 @@ const sendNewPasswordEmail = async (email, name, newPassword) => {
         pass: EMAIL_PASSWORD
       }
     });
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -448,16 +448,16 @@ const sendNewPasswordEmail = async (email, name, newPassword) => {
       </body>
       </html>
     `;
-    
+
     const mailOptions = {
       from: `"Equipe Dengue Tracker" <${EMAIL_USER}>`,
       to: email,
       subject: '🔑 Sua Nova Senha - Dengue Tracker',
       html: htmlContent
     };
-    
+
     const info = await transporter.sendMail(mailOptions);
-    
+
     console.log(`Email com nova senha enviado para ${email}`, info.messageId);
     return true;
   } catch (error) {
@@ -466,7 +466,7 @@ const sendNewPasswordEmail = async (email, name, newPassword) => {
   }
 };
 
-module.exports = { 
+module.exports = {
   sendVerificationEmail,
   sendPasswordResetCode,
   sendNewPasswordEmail

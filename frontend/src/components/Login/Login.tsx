@@ -40,15 +40,15 @@ const Login: React.FC = () => {
       setMosquitoPosition(prev => {
         const deltaX = (Math.random() - 0.5) * 4 * mosquitoSpeed
         const deltaY = (Math.random() - 0.5) * 4 * mosquitoSpeed
-        
+
         let newX = prev.x + deltaX
         let newY = prev.y + deltaY
-        
+
         if (newX < 5) newX = 5
         if (newX > 95) newX = 95
         if (newY < 5) newY = 5
         if (newY > 95) newY = 95
-        
+
         return { x: newX, y: newY }
       })
     }
@@ -61,17 +61,17 @@ const Login: React.FC = () => {
     const speedInterval = setInterval(() => {
       setMosquitoSpeed(0.5 + Math.random() * 1.5)
     }, 2000 + Math.random() * 3000)
-    
+
     return () => clearInterval(speedInterval)
   }, [])
 
   const eliminateMosquito = () => {
     setMosquitoVisible(false)
-    
+
     setTimeout(() => {
-      setMosquitoPosition({ 
-        x: Math.random() * 90 + 5, 
-        y: Math.random() * 90 + 5 
+      setMosquitoPosition({
+        x: Math.random() * 90 + 5,
+        y: Math.random() * 90 + 5
       })
       setMosquitoVisible(true)
     }, 5000 + Math.random() * 5000)
@@ -79,11 +79,11 @@ const Login: React.FC = () => {
 
   const formatCPF = (value: string) => {
     const cpfNumbers = value.replace(/\D/g, '')
-    
+
     if (cpfNumbers.length <= 11) {
       return cpfNumbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
     }
-    
+
     return cpfNumbers.slice(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
   }
 
@@ -104,14 +104,14 @@ const Login: React.FC = () => {
 
   const toggleMode = async (e: React.MouseEvent, mode: 'login' | 'register' | 'forgot-password') => {
     e.preventDefault()
-    
+
     setIsTransitioning(true)
-    
+
     setTimeout(() => {
       setIsRegisterMode(false)
       setIsForgotPasswordMode(false)
       setIsResetCodeMode(false)
-      
+
       switch (mode) {
         case 'register':
           setIsRegisterMode(true)
@@ -123,9 +123,9 @@ const Login: React.FC = () => {
         default:
           break
       }
-      
+
       clearForm()
-      
+
       setTimeout(() => {
         setIsTransitioning(false)
       }, 50)
@@ -194,7 +194,7 @@ const Login: React.FC = () => {
       if (response.ok) {
         setSuccess("Nova senha enviada para seu email!")
         setTimeout(() => {
-          toggleMode({ preventDefault: () => {} } as React.MouseEvent, 'login')
+          toggleMode({ preventDefault: () => { } } as React.MouseEvent, 'login')
           setTimeout(() => setSuccess(""), 100)
         }, 2000)
       } else {
@@ -210,17 +210,17 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    
+
     if (isForgotPasswordMode) {
       await handleForgotPassword()
       return
     }
-    
+
     if (isResetCodeMode) {
       await handleResetPassword()
       return
     }
-    
+
     setIsLoading(true)
     setError("")
     setSuccess("")
@@ -269,16 +269,16 @@ const Login: React.FC = () => {
 
         if (response.ok && data.status === "success") {
           setSuccess("Login realizado com sucesso!")
-          
+
           authLogin(data.token, data.data.user)
-          
+
           setEmail("")
           setPassword("")
-          
+
           console.log("Login realizado com sucesso:", data.data.user)
-          
+
         } else {
-          setError("Credenciais inválidas. Tente novamente.")
+          setError(data.message || "Credenciais inválidas. Tente novamente.")
         }
       }
     } catch (err) {
@@ -298,7 +298,7 @@ const Login: React.FC = () => {
 
   const getModeConfig = () => {
     const mode = getCurrentMode()
-    
+
     const configs = {
       'login': {
         title: 'Dengue Tracker',
@@ -333,7 +333,7 @@ const Login: React.FC = () => {
         loadingText: 'Confirmando...'
       }
     }
-    
+
     return configs[mode]
   }
 
@@ -342,8 +342,8 @@ const Login: React.FC = () => {
   return (
     <div className="login-container">
       {mosquitoVisible && (
-        <div 
-          className="mosquito" 
+        <div
+          className="mosquito"
           style={{
             left: `${mosquitoPosition.x}%`,
             top: `${mosquitoPosition.y}%`,
@@ -384,11 +384,11 @@ const Login: React.FC = () => {
                 <div className="card-content">
                   <form onSubmit={handleSubmit} className={`login-form ${isTransitioning ? 'form-transitioning' : 'fade-in'}`}>
                     {error && (
-                      <div className="error-message message-slide-in" style={{ 
-                        color: '#ef4444', 
-                        backgroundColor: '#fef2f2', 
-                        padding: '12px', 
-                        borderRadius: '6px', 
+                      <div className="error-message message-slide-in" style={{
+                        color: '#ef4444',
+                        backgroundColor: '#fef2f2',
+                        padding: '12px',
+                        borderRadius: '6px',
                         marginBottom: '16px',
                         border: '1px solid #fecaca',
                         fontSize: '14px'
@@ -396,13 +396,13 @@ const Login: React.FC = () => {
                         {error}
                       </div>
                     )}
-                    
+
                     {success && (
-                      <div className="success-message message-slide-in" style={{ 
-                        color: '#22c55e', 
-                        backgroundColor: '#f0fdf4', 
-                        padding: '12px', 
-                        borderRadius: '6px', 
+                      <div className="success-message message-slide-in" style={{
+                        color: '#22c55e',
+                        backgroundColor: '#f0fdf4',
+                        padding: '12px',
+                        borderRadius: '6px',
                         marginBottom: '16px',
                         border: '1px solid #bbf7d0',
                         fontSize: '14px'
@@ -416,14 +416,14 @@ const Login: React.FC = () => {
                         <label htmlFor="name" className="form-label">
                           Nome Completo
                         </label>
-                        <input 
-                          id="name" 
-                          type="text" 
-                          placeholder="Seu nome completo" 
-                          className="form-input" 
+                        <input
+                          id="name"
+                          type="text"
+                          placeholder="Seu nome completo"
+                          className="form-input"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          required 
+                          required
                         />
                       </div>
                     )}
@@ -432,14 +432,14 @@ const Login: React.FC = () => {
                       <label htmlFor="email" className="form-label">
                         Email
                       </label>
-                      <input 
-                        id="email" 
-                        type="email" 
-                        placeholder="seu@email.com" 
-                        className="form-input" 
+                      <input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        className="form-input"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        required 
+                        required
                       />
                     </div>
 
@@ -448,15 +448,15 @@ const Login: React.FC = () => {
                         <label htmlFor="cpf" className="form-label">
                           CPF
                         </label>
-                        <input 
-                          id="cpf" 
-                          type="text" 
-                          placeholder="000.000.000-00" 
-                          className="form-input" 
+                        <input
+                          id="cpf"
+                          type="text"
+                          placeholder="000.000.000-00"
+                          className="form-input"
                           value={cpf}
                           onChange={handleCPFChange}
                           maxLength={14}
-                          required 
+                          required
                         />
                       </div>
                     )}
@@ -466,15 +466,15 @@ const Login: React.FC = () => {
                         <label htmlFor="resetCode" className="form-label">
                           Código de Recuperação
                         </label>
-                        <input 
-                          id="resetCode" 
-                          type="text" 
-                          placeholder="Digite o código de 6 dígitos" 
-                          className="form-input" 
+                        <input
+                          id="resetCode"
+                          type="text"
+                          placeholder="Digite o código de 6 dígitos"
+                          className="form-input"
                           value={resetCode}
                           onChange={(e) => setResetCode(e.target.value)}
                           maxLength={6}
-                          required 
+                          required
                         />
                       </div>
                     )}
@@ -486,9 +486,9 @@ const Login: React.FC = () => {
                             Senha
                           </label>
                           {!isRegisterMode && (
-                            <a 
-                              href="#" 
-                              onClick={(e) => toggleMode(e, 'forgot-password')} 
+                            <a
+                              href="#"
+                              onClick={(e) => toggleMode(e, 'forgot-password')}
                               className="forgot-password"
                             >
                               Esqueci minha senha
@@ -517,9 +517,9 @@ const Login: React.FC = () => {
                       </div>
                     )}
 
-                    <button 
-                      type="submit" 
-                      disabled={isLoading} 
+                    <button
+                      type="submit"
+                      disabled={isLoading}
                       className={`submit-button ${isTransitioning ? 'button-exit' : 'button-enter'}`}
                       style={{ animationDelay: isRegisterMode ? '0.4s' : '0.2s' }}
                     >
@@ -546,16 +546,16 @@ const Login: React.FC = () => {
                       <div className={`signup-container ${isTransitioning ? 'signup-exit' : 'fade-in'}`} style={{ animationDelay: '0.4s' }}>
                         <p className="signup-text">
                           {isRegisterMode ? "Já tem uma conta? " : "Não tem uma conta? "}
-                          <a 
-                            href="#" 
-                            onClick={(e) => toggleMode(e, isRegisterMode ? 'login' : 'register')} 
+                          <a
+                            href="#"
+                            onClick={(e) => toggleMode(e, isRegisterMode ? 'login' : 'register')}
                             className="signup-link"
                           >
                             {isRegisterMode ? "Faça login" : "Cadastre-se gratuitamente"}
                           </a>
                         </p>
                         <p className="community-text">
-                          {isRegisterMode 
+                          {isRegisterMode
                             ? "Volte e acesse sua conta existente"
                             : "Junte-se à comunidade e ajude a prevenir a dengue"
                           }
@@ -567,10 +567,10 @@ const Login: React.FC = () => {
                   {(isForgotPasswordMode || isResetCodeMode) && (
                     <div className={`signup-container ${isTransitioning ? 'signup-exit' : 'fade-in'}`} style={{ animationDelay: '0.3s' }}>
                       <p className="signup-text">
-                        Lembrou da senha? 
-                        <a 
-                          href="#" 
-                          onClick={(e) => toggleMode(e, 'login')} 
+                        Lembrou da senha?
+                        <a
+                          href="#"
+                          onClick={(e) => toggleMode(e, 'login')}
                           className="signup-link"
                         >
                           Voltar ao login

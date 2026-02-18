@@ -1,58 +1,39 @@
-const mongoose = require('mongoose');
+const { DataTypes, Model } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const DengueFocusSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+class DengueFocus extends Model {}
+
+DengueFocus.init({
   latitude: {
-    type: Number,
-    required: [true, 'Latitude é obrigatória']
+    type: DataTypes.DECIMAL(10, 8),
+    allowNull: false
   },
   longitude: {
-    type: Number,
-    required: [true, 'Longitude é obrigatória']
-  },
-  // GeoJSON para buscas geográficas no MongoDB
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      index: '2dsphere'
-    }
+    type: DataTypes.DECIMAL(11, 8),
+    allowNull: false
   },
   description: {
-    type: String,
-    required: [true, 'Descrição é obrigatória'],
-    minlength: [10, 'Descrição deve ter no mínimo 10 caracteres']
+    type: DataTypes.TEXT,
+    allowNull: false,
+    validate: { len: [10, 500] }
   },
-  photoUrl: String,
-  address: String,
-  riskLevel: {
-    type: String,
-    enum: ['baixo_risco', 'medio_risco', 'alto_risco'],
-    required: true
+  photo_url: DataTypes.STRING,
+  address: DataTypes.STRING,
+  risk_level: {
+    type: DataTypes.ENUM('baixo_risco', 'medio_risco', 'alto_risco'),
+    allowNull: false
   },
   status: {
-    type: String,
-    enum: ['monitorando', 'resolvido'],
-    default: 'monitorando'
+    type: DataTypes.ENUM('monitorando', 'resolvido'),
+    defaultValue: 'monitorando'
   }
 }, {
-  timestamps: true
+  sequelize,
+  modelName: 'DengueFocus'
 });
 
-// Atualiza o objeto location antes de salvar
-DengueFocusSchema.pre('save', function(next) {
-  if (this.latitude && this.longitude) {
-    this.location.coordinates = [this.longitude, this.latitude];
-  }
-  next();
-});
+// Relacionamento (Equivalente ao ref: 'User' do Mongoose)
+const User = require('./User');
+DengueFocus.belongsTo(User, { foreignKey: 'user_id' });
 
-module.exports = mongoose.model('DengueFocus', DengueFocusSchema);
+module.exports = DengueFocus;

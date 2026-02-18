@@ -1,63 +1,85 @@
-const mongoose = require('mongoose');
+const { DataTypes, Model } = require('sequelize');
+const { sequelize } = require('../config/database');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-const UserSchema = new mongoose.Schema({
+class User extends Model {
+  async matchPassword(enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+  }
+
+  generateVerificationToken() {
+    const token = crypto.randomBytes(32).toString('hex');
+    this.verificationToken = token;
+    this.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return token;
+  }
+}
+
+User.init({
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
   name: {
-    type: String,
-    required: [true, 'Nome é obrigatório'],
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   email: {
-    type: String,
-    required: [true, 'Email é obrigatório'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Por favor, forneça um email válido']
+    validate: { isEmail: true }
   },
   password: {
-    type: String,
-    required: [true, 'Senha é obrigatória'],
-    minlength: [6, 'Senha deve ter pelo menos 6 caracteres'],
-    select: false // Não retorna a senha por padrão (equivalente ao scope do Sequelize)
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   cpf: {
-    type: String,
-    required: [true, 'CPF é obrigatório'],
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    // A validação de CPF pode ser feita no Controller ou via biblioteca externa
-    set: v => v.replace(/[^\d]/g, '')
   },
   verified: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
-  verificationToken: String,
-  verificationTokenExpires: Date
+  verificationToken: {
+    type: DataTypes.STRING,
+    field: 'verification_token'
+  },
+  verificationTokenExpires: {
+    type: DataTypes.DATE,
+    field: 'verification_token_expires'
+  }
 }, {
-  timestamps: true
+  sequelize,
+  modelName: 'User',
+  tableName: 'Users',
+  underscored: true,
+  timestamps: true,
+
+  // 🔒 Por padrão NÃO retorna CPF
+  defaultScope: {
+    attributes: { exclude: ['cpf'] }
+  },
+
+  // 🔓 Quando quiser incluir CPF
+  scopes: {
+    withCPF: {
+      attributes: { include: ['cpf'] }
+    }
+  },
+
+  hooks: {
+    beforeSave: async (user) => {
+      if (user.changed('password')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    }
+  }
 });
 
-// Criptografia de senha antes de salvar (Equivalente ao beforeSave do Sequelize)
-UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// Método para verificar senha
-UserSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// Gerar token de verificação
-UserSchema.methods.generateVerificationToken = function() {
-  const token = crypto.randomBytes(32).toString('hex');
-  this.verificationToken = token;
-  this.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
-  return token;
-};
-
-module.exports = mongoose.model('User', UserSchema);
+module.exports = User;

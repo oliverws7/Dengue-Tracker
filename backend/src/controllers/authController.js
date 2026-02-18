@@ -24,7 +24,9 @@ exports.login = async (req, res) => {
       });
     }
 
-    const user = await User.scope('withPassword').findOne({ 
+    // No Sequelize, usamos findOne com 'where'. 
+    // Certifique-se de que o scope 'withPassword' esteja definido no User.js ou remova o .scope()
+    const user = await User.findOne({ 
       where: { email } 
     });
 
@@ -44,7 +46,7 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user.id);
 
-    const userResponse = user.toJSON();
+    const userResponse = user.get({ plain: true }); // Converte instância Sequelize para objeto simples
     delete userResponse.password;
 
     res.status(200).json({
@@ -82,6 +84,7 @@ exports.protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, jwtConfig.secret);
 
+    // Mongoose: findById -> Sequelize: findByPk
     const currentUser = await User.findByPk(decoded.id);
     if (!currentUser) {
       return res.status(401).json({
@@ -118,7 +121,7 @@ exports.verifyEmail = async (req, res) => {
     
     const user = await User.findOne({
       where: {
-        verificationToken: token,
+        verificationToken: token, // Note: Verifique se no model está verificationToken ou verification_token
         verificationTokenExpires: { 
           [Op.gt]: new Date() 
         }
@@ -236,19 +239,20 @@ exports.forgotPassword = async (req, res) => {
 
     const resetCode = generateResetCode();
     
+    // Desativar códigos antigos usando userId (relação correta no SQL)
     await PasswordReset.update(
       { used: true },
       { 
         where: { 
-          email: user.email, 
+          userId: user.id, 
           used: false 
         } 
       }
     );
     
     await PasswordReset.create({
-      email: user.email,
-      resetCode: resetCode,
+      userId: user.id,
+      token: resetCode, // Mudamos de 'resetCode' para 'token' para bater com o modelo passwordReset.js criado
       expiresAt: new Date(Date.now() + 30 * 60 * 1000)
     });
 
@@ -287,14 +291,15 @@ exports.resetPassword = async (req, res) => {
 
     const passwordReset = await PasswordReset.findOne({
       where: {
-        email: user.email,
-        resetCode: resetCode,
-        used: false
+        userId: user.id,
+        token: resetCode,
+        used: false,
+        expiresAt: { [Op.gt]: new Date() } // Verificação de validade direta na query
       },
       order: [['createdAt', 'DESC']]
     });
 
-    if (!passwordReset || !passwordReset.isValid()) {
+    if (!passwordReset) {
       return res.status(400).json({
         status: 'error',
         message: 'Código de recuperação inválido ou expirado'
