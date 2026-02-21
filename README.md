@@ -10,7 +10,7 @@ O **DengueTracker** é uma plataforma colaborativa de monitoramento e combate à
 ---
 
 ## 🏗️ Arquitetura do Sistema
-
+ 
 A solução é estruturada em um ecossistema full-stack moderno:
 
 * **Backend**: API REST robusta em **Node.js** com persistência em **PostgreSQL**. Gerencia autenticação JWT, processamento de imagens via AWS S3, envio de e-mails e lógica de gamificação.
