@@ -1,7 +1,40 @@
 const { DataTypes, Model } = require('sequelize');
 const { sequelize } = require('../config/database');
 
-class DengueFocus extends Model {}
+class DengueFocus extends Model {
+  static async getStatsByRisk() {
+    return await this.findAll({
+      attributes: [
+        'riskLevel',
+        'status',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      group: ['riskLevel', 'status']
+    });
+  }
+
+  async markAsResolved() {
+    this.status = 'resolvido';
+    return await this.save();
+  }
+
+  async updateRiskLevel(newRiskLevel) {
+    this.riskLevel = newRiskLevel;
+    return await this.save();
+  }
+
+  getDistance(lat, lng) {
+    const R = 6371;
+    const dLat = (lat - parseFloat(this.latitude)) * Math.PI / 180;
+    const dLon = (lng - parseFloat(this.longitude)) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(parseFloat(this.latitude) * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+}
 
 DengueFocus.init({
   latitude: {
@@ -17,9 +50,9 @@ DengueFocus.init({
     allowNull: false,
     validate: { len: [10, 500] }
   },
-  photo_url: DataTypes.STRING,
+  photoUrl: DataTypes.STRING,
   address: DataTypes.STRING,
-  risk_level: {
+  riskLevel: {
     type: DataTypes.ENUM('baixo_risco', 'medio_risco', 'alto_risco'),
     allowNull: false
   },
@@ -32,8 +65,7 @@ DengueFocus.init({
   modelName: 'DengueFocus'
 });
 
-// Relacionamento (Equivalente ao ref: 'User' do Mongoose)
 const User = require('./User');
-DengueFocus.belongsTo(User, { foreignKey: 'user_id' });
+DengueFocus.belongsTo(User, { foreignKey: 'userId' });
 
 module.exports = DengueFocus;

@@ -253,7 +253,7 @@ const Login: React.FC = () => {
           setError(data.message || "Erro ao realizar cadastro. Tente novamente.")
         }
       } else {
-        // Login
+
         const response = await fetch("http://localhost:3000/api/v1/auth/login", {
           method: "POST",
           headers: {

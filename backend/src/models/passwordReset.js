@@ -2,7 +2,7 @@ const { DataTypes, Model } = require('sequelize');
 const { sequelize } = require('../config/database');
 
 class PasswordReset extends Model {
-  // Helper para verificar se o token ainda é válido
+
   isValid() {
     return !this.used && new Date() < this.expiresAt;
   }
@@ -15,11 +15,11 @@ PasswordReset.init({
     primaryKey: true
   },
   userId: {
-    type: DataTypes.INTEGER, // Deve ser INTEGER para bater com o User.id
+    type: DataTypes.INTEGER,
     allowNull: false,
-    field: 'user_id', // Garante o padrão snake_case no banco
+    field: 'user_id',
     references: {
-      model: 'Users', // Nome exato da tabela definido no User.js
+      model: 'Users',
       key: 'id'
     },
     onUpdate: 'CASCADE',
@@ -43,7 +43,7 @@ PasswordReset.init({
   modelName: 'PasswordReset',
   tableName: 'password_resets',
   timestamps: true,
-  underscored: true // Garante created_at e updated_at
+  underscored: true
 });
 
 module.exports = PasswordReset;

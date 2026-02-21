@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { dengueFocusController } = require('../../controllers');
 const { authController } = require('../../controllers');
-const { 
+const {
   validateDengueFocusCreation,
   validateDengueFocusUpdate,
   validateRiskLevelUpdate
@@ -10,15 +10,15 @@ const {
 
 router.use(authController.protect);
 
-router.post('/', 
-  dengueFocusController.uploadPhoto, 
-  validateDengueFocusCreation, 
+router.post('/',
+  dengueFocusController.uploadPhoto,
+  validateDengueFocusCreation,
   dengueFocusController.createDengueFocus
 );
 
-router.patch('/:id', 
-  dengueFocusController.uploadPhoto, 
-  validateDengueFocusUpdate, 
+router.patch('/:id',
+  dengueFocusController.uploadPhoto,
+  validateDengueFocusUpdate,
   dengueFocusController.updateDengueFocus
 );
 

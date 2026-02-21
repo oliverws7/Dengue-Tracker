@@ -23,11 +23,8 @@ exports.login = async (req, res) => {
         message: 'Por favor, forneça email e senha'
       });
     }
-
-    // No Sequelize, usamos findOne com 'where'. 
-    // Certifique-se de que o scope 'withPassword' esteja definido no User.js ou remova o .scope()
-    const user = await User.findOne({ 
-      where: { email } 
+    const user = await User.findOne({
+      where: { email }
     });
 
     if (!user || !(await user.matchPassword(password))) {
@@ -46,7 +43,7 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user.id);
 
-    const userResponse = user.get({ plain: true }); // Converte instância Sequelize para objeto simples
+    const userResponse = user.get({ plain: true });
     delete userResponse.password;
 
     res.status(200).json({
@@ -84,7 +81,6 @@ exports.protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, jwtConfig.secret);
 
-    // Mongoose: findById -> Sequelize: findByPk
     const currentUser = await User.findByPk(decoded.id);
     if (!currentUser) {
       return res.status(401).json({
@@ -118,30 +114,29 @@ exports.protect = async (req, res, next) => {
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
-    
+
     const user = await User.findOne({
       where: {
-        verificationToken: token, // Note: Verifique se no model está verificationToken ou verification_token
-        verificationTokenExpires: { 
-          [Op.gt]: new Date() 
+        verificationTokenExpires: {
+          [Op.gt]: new Date()
         }
       }
     });
-    
+
     if (!user) {
       return res.status(400).json({
         status: 'error',
         message: 'Token de verificação inválido ou expirado'
       });
     }
-    
+
     user.verified = true;
     user.verificationToken = null;
     user.verificationTokenExpires = null;
     await user.save();
-    
+
     res.redirect(`${FRONTEND_URL}/?verified=true`);
-    
+
   } catch (error) {
     res.status(500).json({
       status: 'error',
@@ -153,35 +148,35 @@ exports.verifyEmail = async (req, res) => {
 exports.resendVerificationEmail = async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({
         status: 'error',
         message: 'Por favor, forneça um email'
       });
     }
-    
+
     const user = await User.findOne({ where: { email } });
-    
+
     if (!user) {
       return res.status(404).json({
         status: 'error',
         message: 'Usuário não encontrado'
       });
     }
-    
+
     if (user.verified) {
       return res.status(400).json({
         status: 'error',
         message: 'Este email já foi verificado'
       });
     }
-    
+
     const verificationToken = user.generateVerificationToken();
     await user.save();
-    
+
     await sendVerificationEmail(user.email, user.name, verificationToken);
-    
+
     res.status(200).json({
       status: 'success',
       message: 'Email de verificação reenviado com sucesso'
@@ -202,12 +197,12 @@ const generateRandomPassword = () => {
   const length = 10;
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
   let password = '';
-  
+
   for (let i = 0; i < length; i++) {
     const randomIndex = Math.floor(Math.random() * charset.length);
     password += charset[randomIndex];
   }
-  
+
   return password;
 };
 
@@ -238,21 +233,20 @@ exports.forgotPassword = async (req, res) => {
     }
 
     const resetCode = generateResetCode();
-    
-    // Desativar códigos antigos usando userId (relação correta no SQL)
+
     await PasswordReset.update(
       { used: true },
-      { 
-        where: { 
-          userId: user.id, 
-          used: false 
-        } 
+      {
+        where: {
+          userId: user.id,
+          used: false
+        }
       }
     );
-    
+
     await PasswordReset.create({
       userId: user.id,
-      token: resetCode, // Mudamos de 'resetCode' para 'token' para bater com o modelo passwordReset.js criado
+      token: resetCode,
       expiresAt: new Date(Date.now() + 30 * 60 * 1000)
     });
 
@@ -294,7 +288,7 @@ exports.resetPassword = async (req, res) => {
         userId: user.id,
         token: resetCode,
         used: false,
-        expiresAt: { [Op.gt]: new Date() } // Verificação de validade direta na query
+        expiresAt: { [Op.gt]: new Date() }
       },
       order: [['createdAt', 'DESC']]
     });

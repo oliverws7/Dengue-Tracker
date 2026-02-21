@@ -91,7 +91,7 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [localFoco, setLocalFoco] = useState<FocoDengueProps | null>(foco)
-  
+
   const currentFocoIdRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -228,20 +228,20 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
 
     setIsUpdating(true)
     setUpdateError(null)
-    
+
     try {
       console.log(`Atualizando grau de risco do foco ${localFoco.id}: ${localFoco.riskLevel} -> ${tempRiskLevel}`)
-      
+
       await updateFocoBackend(localFoco.id, { riskLevel: tempRiskLevel })
-      
+
       const updatedFoco = { ...localFoco, riskLevel: tempRiskLevel }
       setLocalFoco(updatedFoco)
-      
+
       if (onUpdateFoco) {
         await onUpdateFoco(localFoco.id, { riskLevel: tempRiskLevel })
         console.log(`Callback onUpdateFoco chamado para foco ${localFoco.id}`)
       }
-      
+
       setEditingRisk(false)
       console.log(`Grau de risco atualizado com sucesso: ${tempRiskLevel}`)
     } catch (error) {
@@ -260,20 +260,20 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
 
     setIsUpdating(true)
     setUpdateError(null)
-    
+
     try {
       console.log(`Atualizando descrição do foco ${localFoco.id}`)
-      
+
       await updateFocoBackend(localFoco.id, { description: tempDescription.trim() })
-      
+
       const updatedFoco = { ...localFoco, description: tempDescription.trim() }
       setLocalFoco(updatedFoco)
-      
+
       if (onUpdateFoco) {
         await onUpdateFoco(localFoco.id, { description: tempDescription.trim() })
         console.log(`Callback onUpdateFoco chamado para foco ${localFoco.id}`)
       }
-      
+
       setEditingDescription(false)
       console.log('Descrição atualizada com sucesso')
     } catch (error) {
@@ -299,17 +299,17 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
   const handleDeleteFoco = async () => {
     setIsDeleting(true)
     setDeleteError(null)
-    
+
     try {
       console.log(`Excluindo foco ${localFoco.id}`)
-      
+
       await deleteFocoBackend(localFoco.id)
-      
+
       if (onDeleteFoco) {
         await onDeleteFoco(localFoco.id)
         console.log(`Callback onDeleteFoco chamado para foco ${localFoco.id}`)
       }
-      
+
       console.log('Foco excluído com sucesso')
       setShowDeleteConfirm(false)
       onClose()
@@ -327,7 +327,7 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
   }
 
   return (
-    <div 
+    <div
       className="modal-backdrop"
       onClick={handleBackdropClick}
     >
@@ -343,8 +343,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
               <p className="subtitle-text">ID: #{localFoco.id}</p>
             </div>
             {isOwner && (
-              <button 
-                onClick={() => setShowDeleteConfirm(true)} 
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
                 className="btn-delete-header"
                 title="Excluir foco"
                 disabled={isUpdating || isDeleting}
@@ -378,8 +378,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                   <p className="risco-label">Grau de Risco</p>
                   {editingRisk ? (
                     <div className="edit-risk-container">
-                      <select 
-                        value={tempRiskLevel} 
+                      <select
+                        value={tempRiskLevel}
                         onChange={(e) => setTempRiskLevel(e.target.value as "alto_risco" | "medio_risco" | "baixo_risco")}
                         className="risk-select"
                         disabled={isUpdating}
@@ -389,8 +389,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                         <option value="alto_risco">Alto Risco</option>
                       </select>
                       <div className="edit-buttons">
-                        <button 
-                          onClick={handleSaveRisk} 
+                        <button
+                          onClick={handleSaveRisk}
                           className="btn-save"
                           disabled={isUpdating}
                         >
@@ -407,8 +407,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                             <Save className="icon-edit" />
                           )}
                         </button>
-                        <button 
-                          onClick={handleCancelRisk} 
+                        <button
+                          onClick={handleCancelRisk}
                           className="btn-cancel"
                           disabled={isUpdating}
                         >
@@ -426,8 +426,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                             : "Baixo Risco"}
                       </span>
                       {isOwner && (
-                        <button 
-                          onClick={handleEditRisk} 
+                        <button
+                          onClick={handleEditRisk}
                           className="btn-edit"
                           disabled={isUpdating || isDeleting}
                         >
@@ -521,8 +521,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                   📝 Descrição Detalhada
                 </h3>
                 {isOwner && !editingDescription && (
-                  <button 
-                    onClick={handleEditDescription} 
+                  <button
+                    onClick={handleEditDescription}
                     className="btn-edit"
                     disabled={isUpdating || isDeleting}
                   >
@@ -542,8 +542,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                       placeholder="Descreva o foco de dengue..."
                     />
                     <div className="edit-buttons">
-                      <button 
-                        onClick={handleSaveDescription} 
+                      <button
+                        onClick={handleSaveDescription}
                         className="btn-save"
                         disabled={isUpdating}
                       >
@@ -567,8 +567,8 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                           </>
                         )}
                       </button>
-                      <button 
-                        onClick={handleCancelDescription} 
+                      <button
+                        onClick={handleCancelDescription}
                         className="btn-cancel"
                         disabled={isUpdating}
                       >
@@ -652,14 +652,14 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                 )}
               </div>
               <div className="delete-modal-footer">
-                <button 
+                <button
                   onClick={handleCancelDelete}
                   className="btn-cancel-delete"
                   disabled={isDeleting}
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleDeleteFoco}
                   className="btn-confirm-delete"
                   disabled={isDeleting}

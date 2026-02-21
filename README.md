@@ -1,107 +1,106 @@
+# 🦟 Dengue Tracker
+
+![Dengue Tracker Banner](https://img.shields.io/badge/Status-Desenvolvimento-green?style=for-the-badge)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+
+O **Dengue Tracker** é uma solução digital completa e colaborativa para o monitoramento e combate à proliferação do mosquito *Aedes aegypti*. Através de geolocalização e engajamento comunitário, a plataforma permite que usuários identifiquem e reportem focos de dengue em tempo real.
 
 ---
 
-# 🦟 DengueTracker Ecosystem
+## 🚀 Funcionalidades Chave
 
-O **DengueTracker** é uma plataforma colaborativa de monitoramento e combate à dengue. Através de mecanismos de **gamificação**, a plataforma engaja a população no reporte de focos do mosquito *Aedes aegypti*, fornecendo dados georreferenciados cruciais para ações rápidas de saúde pública.
+### 🗺️ Monitoramento Georreferenciado
+- **Mapa Interativo**: Visualização em tempo real de focos registrados usando Leaflet.
+- **Registro de Focos**: Envio de coordenadas precisas, descrição detalhada e fotos de evidência.
+- **Níveis de Risco**: Classificação dinâmica (Baixo, Médio, Alto) para priorização de ações.
 
----
+### 📊 Dashboard de Estatísticas
+- **Dados em Tempo Real**: Painel com contagem total de focos, casos ativos e resolvidos.
+- **Distribuição por Risco**: Gráficos e indicadores de porcentagem por nível de perigo.
 
-## 🏗️ Arquitetura do Sistema
+### 🔐 Segurança e Autenticação
+- **Sistema de Usuários**: Cadastro seguro com validação de CPF e E-mail.
+- **Autenticação JWT**: Proteção de rotas e sessões persistentes.
+- **Verificação de E-mail**: Processo de ativação de conta para garantir usuários reais.
+- **Recuperação de Senha**: Sistema robusto de reset de senha via token por e-mail.
 
-A solução é estruturada em um ecossistema full-stack moderno:
-
-* **Backend**: API REST robusta em **Node.js** com persistência em **MongoDB**. Gerencia autenticação JWT, processamento de imagens via AWS S3, envio de e-mails e lógica de gamificação.
-* **Frontend**: Aplicação **React** com **TypeScript**, utilizando **Vite** para um desenvolvimento ágil e uma experiência de usuário fluida.
-
-### 📁 Estrutura de Pastas Atualizada
-
-```text
-.
-├── backend/
-│   ├── src/
-│   │   ├── config/         # Configurações de banco de dados, JWT e S3
-│   │   ├── controllers/    # Lógica de controle das rotas (Auth, User, Focus)
-│   │   ├── middlewares/    # Validações de schema e segurança
-│   │   ├── models/         # Definições de schemas Mongoose
-│   │   ├── routes/v1/      # Definição dos endpoints versionados
-│   │   └── services/       # Serviços auxiliares (ex: EmailService)
-│   └── tests/              # Testes de integração e serviços
-├── frontend/
-│   ├── src/
-│   │   ├── components/     # UI, Mapas e Modais
-│   │   ├── context/        # Gerenciamento de estado de Autenticação
-│   │   ├── hooks/          # Hooks customizados para estatísticas
-│   │   ├── pages/          # Telas de Home e Login
-│   │   └── types/          # Definições de tipos TypeScript
-└── README.md
-
-```
+### ⚕️ Saúde e Prevenção
+- **Guia de Sintomas**: Modal informativo com os principais sinais da doença e alertas de emergência.
+- **Guia de Prevenção**: Dicas práticas para eliminar criadouros e proteção individual.
 
 ---
 
 ## 🛠️ Stack Tecnológica
 
-| Componente | Tecnologias |
-| --- | --- |
-| **Linguagens** | JavaScript (ES6+), TypeScript |
-| **Backend** | Node.js, Express, MongoDB (Mongoose), JWT |
-| **Frontend** | React 18, Vite, CSS Modules, Context API |
-| **Serviços Cloud** | AWS S3 (Armazenamento de fotos), Nodemailer |
-| **Qualidade** | ESLint, Prettier, Vitest/Jest |
+### Frontend
+- **React 19** + **TypeScript**
+- **Vite** (Build Tool)
+- **Leaflet** (Mapas Interativos)
+- **Lucide React** (Ícones Premium)
+- **Context API** (Gerenciamento de Estado)
+
+### Backend
+- **Node.js** + **Express**
+- **Sequelize ORM** (PostgreSQL)
+- **AWS SDK** (Armazenamento de imagens no S3)
+- **Nodemailer** (Comunicação por E-mail)
+- **Express Validator** (Sanitização de Dados)
 
 ---
 
-## 🚦 Como Iniciar
+## 📁 Estrutura do Projeto
 
-### 1. Pré-requisitos
+```text
+Dengue-Tracker/
+├── backend/                # API RESTful
+│   ├── src/
+│   │   ├── config/         # Database, AWS & Email settings
+│   │   ├── controllers/    # Business Logic
+│   │   ├── middlewares/    # Security & Validation
+│   │   ├── models/         # Sequelize Definitions
+│   │   ├── routes/v1/      # API Endpoints
+│   │   └── services/       # Email & Third-party services
+│   └── server.js           # Entry point
+└── frontend/               # Single Page Application
+    ├── src/
+    │   ├── components/     # UI Components, Modals & Map
+    │   ├── context/        # Auth & App state
+    │   ├── hooks/          # Custom Hooks (Statistics, etc)
+    │   ├── pages/          # View components
+    │   └── styles/         # Global & Component Themes
+```
 
-* Node.js (v18+)
-* MongoDB (Local ou Atlas)
-* Conta AWS (para S3) e serviço de SMTP (para e-mails)
+---
 
-### 2. Configuração do Backend
+## ⚙️ Instalação e Configuração
 
+### Pré-requisitos
+- Node.js (v18+)
+- PostgreSQL Instalado
+- Credenciais AWS (para S3)
+
+### 1. Backend
 ```bash
 cd backend
 npm install
-# Configure o .env com MONGODB_URI, JWT_SECRET, AWS_ACCESS_KEY, etc.
+# Crie um arquivo .env com as variáveis:
+# PORT, DATABASE_URL, JWT_SECRET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, etc.
 npm run dev
-
 ```
 
-### 3. Configuração do Frontend
-
+### 2. Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
-
 ```
 
 ---
 
-## 🔌 Principais Endpoints (v1.0)
-
-| Método | Rota | Descrição | Protegido |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/auth/register` | Cadastro de novos usuários | ❌ |
-| `POST` | `/api/v1/auth/login` | Login e geração de token JWT | ❌ |
-| `POST` | `/api/v1/dengue-focus` | Reportar novo foco do mosquito | ✅ |
-| `GET` | `/api/v1/dengue-focus` | Listar focos registrados para o mapa | ❌ |
-| `GET` | `/api/v1/users/profile` | Dados do perfil e pontuação | ✅ |
+## � Licença
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
 
 ---
-
-## 🚀 Funcionalidades Implementadas
-
-* **Geolocalização**: Visualização de focos em mapa interativo.
-* **Recuperação de Senha**: Sistema de reset de senha via token por e-mail.
-* **Upload de Evidências**: Integração com AWS S3 para armazenamento de fotos dos focos.
-* **Segurança**: Proteção de rotas sensíveis e validação de dados com Middlewares.
-
----
-
-## 📄 Licença
-
-Este projeto é open-source sob a licença [MIT](https://opensource.org/license/afl-3-0-php).
+<p align="center">Desenvolvido com ❤️ para uma comunidade mais saudável.</p>

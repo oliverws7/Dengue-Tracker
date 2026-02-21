@@ -3,10 +3,10 @@ const { sendVerificationEmail } = require('../services/emailService');
 
 exports.createUser = async (req, res) => {
   try {
-    const existingUser = await User.findOne({ 
-      where: { email: req.body.email.trim().toLowerCase() } 
+    const existingUser = await User.findOne({
+      where: { email: req.body.email.trim().toLowerCase() }
     });
-    
+
     if (existingUser) {
       return res.status(400).json({
         status: 'error',
@@ -14,10 +14,10 @@ exports.createUser = async (req, res) => {
       });
     }
 
-    const existingCPF = await User.scope('withCPF').findOne({ 
-      where: { cpf: req.body.cpf.replace(/[^\d]/g, '') } 
+    const existingCPF = await User.scope('withCPF').findOne({
+      where: { cpf: req.body.cpf.replace(/[^\d]/g, '') }
     });
-    
+
     if (existingCPF) {
       return res.status(400).json({
         status: 'error',
@@ -54,7 +54,7 @@ exports.createUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
-    
+
     if (error.name === 'SequelizeValidationError') {
       const validationErrors = error.errors.map(err => err.message);
       return res.status(400).json({
@@ -62,23 +62,23 @@ exports.createUser = async (req, res) => {
         message: validationErrors[0] || 'Dados inválidos'
       });
     }
-    
+
     if (error.name === 'SequelizeUniqueConstraintError') {
       const field = error.errors[0].path;
       let message = 'Dados já existem no sistema';
-      
+
       if (field === 'email') {
         message = 'Este email já está sendo utilizado';
       } else if (field === 'cpf') {
         message = 'Este CPF já está cadastrado';
       }
-      
+
       return res.status(400).json({
         status: 'error',
         message: message
       });
     }
-    
+
     res.status(500).json({
       status: 'error',
       message: 'Erro interno do servidor'
@@ -91,7 +91,7 @@ exports.getAllUsers = async (req, res) => {
     const users = await User.findAll({
       attributes: { exclude: ['password', 'verificationToken', 'verificationTokenExpires'] }
     });
-    
+
     res.status(200).json({
       status: 'success',
       results: users.length,
@@ -111,14 +111,14 @@ exports.getUser = async (req, res) => {
     const user = await User.findByPk(req.params.id, {
       attributes: { exclude: ['password', 'verificationToken', 'verificationTokenExpires'] }
     });
-    
+
     if (!user) {
       return res.status(404).json({
         status: 'error',
         message: 'Usuário não encontrado'
       });
     }
-    
+
     res.status(200).json({
       status: 'success',
       data: user
@@ -146,20 +146,20 @@ exports.updateUser = async (req, res) => {
 
     if (name) updateData.name = name;
     if (email) {
-      const existingUser = await User.findOne({ 
-        where: { 
+      const existingUser = await User.findOne({
+        where: {
           email: email.trim().toLowerCase(),
           id: { [Op.ne]: req.user.id }
-        } 
+        }
       });
-      
+
       if (existingUser) {
         return res.status(400).json({
           status: 'error',
           message: 'Este email já está sendo utilizado'
         });
       }
-      
+
       updateData.email = email;
     }
 
@@ -185,7 +185,7 @@ exports.updateUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
-    
+
     if (error.name === 'SequelizeValidationError') {
       const validationErrors = error.errors.map(err => err.message);
       return res.status(400).json({
@@ -193,7 +193,7 @@ exports.updateUser = async (req, res) => {
         message: validationErrors[0] || 'Dados inválidos'
       });
     }
-    
+
     res.status(500).json({
       status: 'error',
       message: 'Erro interno do servidor'
@@ -260,9 +260,9 @@ exports.deleteUser = async (req, res) => {
         message: 'Você só pode excluir seu próprio perfil'
       });
     }
-    
+
     const result = await User.deleteUserAndData(req.params.id);
-    
+
     if (!result.success) {
       return res.status(404).json({
         status: 'error',

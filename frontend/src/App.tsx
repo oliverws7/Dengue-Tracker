@@ -9,13 +9,13 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/" element={<LoginPage />} />
-        <Route 
-          path="/Home" 
+        <Route
+          path="/Home"
           element={
             <ProtectedRoute>
               <Home />
             </ProtectedRoute>
-          } 
+          }
         />
       </Routes>
     </AuthProvider>

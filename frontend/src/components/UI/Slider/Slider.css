@@ -3,7 +3,7 @@
     height: 24px;
     width: 100%;
   }
-  
+
   .slider-input {
     position: absolute;
     top: 0;
@@ -14,7 +14,7 @@
     cursor: pointer;
     z-index: 3;
   }
-  
+
   .slider-track {
     position: absolute;
     top: 50%;
@@ -24,14 +24,14 @@
     background-color: #e2e8f0;
     border-radius: 9999px;
   }
-  
+
   .slider-fill {
     position: absolute;
     height: 100%;
     background-color: #3b82f6;
     border-radius: 9999px;
   }
-  
+
   .slider-thumb {
     position: absolute;
     top: 50%;
@@ -43,9 +43,8 @@
     transform: translate(-50%, -50%);
     z-index: 2;
   }
-  
+
   .slider-input:focus + .slider-track .slider-thumb {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
   }
-  
-  
+

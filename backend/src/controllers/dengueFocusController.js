@@ -28,7 +28,7 @@ const upload = multer({
 const uploadImageToS3 = async (file, focusId) => {
   const fileExtension = file.originalname.split('.').pop();
   const fileName = `dengue-focuses/${focusId}/${uuidv4()}.${fileExtension}`;
-  
+
   const params = {
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: fileName,
@@ -46,10 +46,10 @@ const uploadImageToS3 = async (file, focusId) => {
 
 const deleteImageFromS3 = async (imageUrl) => {
   if (!imageUrl) return;
-  
+
   const urlParts = imageUrl.split('/');
   const key = urlParts.slice(3).join('/');
-  
+
   const params = {
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key
@@ -104,12 +104,12 @@ exports.createDengueFocus = async (req, res) => {
 
 exports.getAllDengueFocuses = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      status, 
-      riskLevel, 
-      userId 
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      riskLevel,
+      userId
     } = req.query;
 
     const offset = (page - 1) * limit;
@@ -199,10 +199,10 @@ exports.updateDengueFocus = async (req, res) => {
     if (req.file) {
       try {
         const oldImageUrl = dengueFocus.photoUrl;
-        
+
         const newImageUrl = await uploadImageToS3(req.file, dengueFocus.id);
         updateData.photoUrl = newImageUrl;
-        
+
         if (oldImageUrl) {
           await deleteImageFromS3(oldImageUrl);
         }
@@ -272,11 +272,11 @@ exports.deleteDengueFocus = async (req, res) => {
 
 exports.getMyDengueFocuses = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      status, 
-      riskLevel 
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      riskLevel
     } = req.query;
 
     const offset = (page - 1) * limit;
@@ -476,14 +476,14 @@ exports.getStatistics = async (req, res) => {
     }, {});
 
     const totalFocuses = await DengueFocus.count();
-    const activeFocuses = await DengueFocus.count({ 
-      where: { status: 'monitorando' } 
+    const activeFocuses = await DengueFocus.count({
+      where: { status: 'monitorando' }
     });
-    const resolvedFocuses = await DengueFocus.count({ 
-      where: { status: 'resolvido' } 
+    const resolvedFocuses = await DengueFocus.count({
+      where: { status: 'resolvido' }
     });
 
-    const riskLevels = ['alto', 'medio', 'baixo'];
+    const riskLevels = ['alto_risco', 'medio_risco', 'baixo_risco'];
     riskLevels.forEach(level => {
       if (!processedStats[level]) {
         processedStats[level] = {

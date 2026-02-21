@@ -45,7 +45,7 @@ export const useStatistics = (refreshInterval: number = 30000) => {
   const fetchStatistics = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken');
-      
+
       if (!token) {
         throw new Error('Token de autenticação não encontrado');
       }
@@ -69,7 +69,7 @@ export const useStatistics = (refreshInterval: number = 30000) => {
 
       if (data.status === 'success' && data.data) {
         const byRiskLevel = data.data.byRiskLevel || {};
-        
+
         const processedStats: ProcessedStats = {
           total: data.data.summary.total || 0,
           active: data.data.summary.active || 0,
@@ -98,7 +98,7 @@ export const useStatistics = (refreshInterval: number = 30000) => {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
       console.error('Erro ao buscar estatísticas:', err);
-      
+
       setStats(prev => ({
         ...prev,
         lastUpdate: new Date().toLocaleString('pt-BR', {

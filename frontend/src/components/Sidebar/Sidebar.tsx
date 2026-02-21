@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 import {
   AlertTriangle,
   BarChart3,
@@ -19,6 +20,7 @@ import Switch from "../UI/Switch/Switch"
 import Badge from "../UI/Badge/Badge"
 import Card from "../UI/Card/Card"
 import Tabs from "../UI/Tabs/Tabs"
+import { SymptomsModal, PreventionModal } from "../InfoModals/InfoModals"
 import { useStatistics } from "../../hooks/useStatistics"
 import { useAuth } from "../../context/AuthContext"
 import "./Sidebar.css"
@@ -55,8 +57,11 @@ export default function Sidebar({
   const { stats, loading, error, refreshStats, lastUpdate } = useStatistics(30000);
   const { logout } = useAuth();
 
+  const [isSymptomsModalOpen, setIsSymptomsModalOpen] = useState(false);
+  const [isPreventionModalOpen, setIsPreventionModalOpen] = useState(false);
+
   const totalByRisk = stats.highRisk + stats.mediumRisk + stats.lowRisk;
-  
+
   const calculatePercentage = (value: number, total: number) => {
     return total > 0 ? Math.round((value / total) * 100) : 0;
   };
@@ -87,8 +92,8 @@ export default function Sidebar({
         <div>
           <p>Erro ao carregar estatísticas</p>
           <p className="error-message">{error}</p>
-          <Button 
-            onClick={handleRefreshStats} 
+          <Button
+            onClick={handleRefreshStats}
             className="retry-button"
             size="small"
           >
@@ -199,8 +204,8 @@ export default function Sidebar({
                 <div className="group-label">
                   <BarChart3 size={16} />
                   <span>Estatísticas de Focos</span>
-                  <Button 
-                    onClick={handleRefreshStats} 
+                  <Button
+                    onClick={handleRefreshStats}
                     className="refresh-button"
                     size="small"
                     disabled={loading}
@@ -210,7 +215,7 @@ export default function Sidebar({
                 </div>
                 <div className="group-content">
                   {error && renderErrorState()}
-                  
+
                   {loading && !error ? renderLoadingState() : (
                     <div className="stats-container">
                       <div className="stats-cards">
@@ -253,8 +258,8 @@ export default function Sidebar({
                           <div className="progress-bar">
                             <div
                               className="progress high-risk"
-                              style={{ 
-                                width: `${highRiskPercentage}%` 
+                              style={{
+                                width: `${highRiskPercentage}%`
                               }}
                             ></div>
                           </div>
@@ -276,8 +281,8 @@ export default function Sidebar({
                           <div className="progress-bar">
                             <div
                               className="progress medium-risk"
-                              style={{ 
-                                width: `${mediumRiskPercentage}%` 
+                              style={{
+                                width: `${mediumRiskPercentage}%`
                               }}
                             ></div>
                           </div>
@@ -299,8 +304,8 @@ export default function Sidebar({
                           <div className="progress-bar">
                             <div
                               className="progress low-risk"
-                              style={{ 
-                                width: `${lowRiskPercentage}%` 
+                              style={{
+                                width: `${lowRiskPercentage}%`
                               }}
                             ></div>
                           </div>
@@ -328,11 +333,11 @@ export default function Sidebar({
           </div>
           <div className="group-content">
             <div className="action-menu">
-              <button className="action-button">
+              <button className="action-button" onClick={() => setIsSymptomsModalOpen(true)}>
                 <Thermometer size={16} />
                 <span>Verificar sintomas</span>
               </button>
-              <button className="action-button">
+              <button className="action-button" onClick={() => setIsPreventionModalOpen(true)}>
                 <HelpCircle size={16} />
                 <span>Como se prevenir</span>
               </button>
@@ -358,6 +363,14 @@ export default function Sidebar({
           </div>
         </div>
       </div>
+      <SymptomsModal
+        isOpen={isSymptomsModalOpen}
+        onClose={() => setIsSymptomsModalOpen(false)}
+      />
+      <PreventionModal
+        isOpen={isPreventionModalOpen}
+        onClose={() => setIsPreventionModalOpen(false)}
+      />
     </div>
   )
 }

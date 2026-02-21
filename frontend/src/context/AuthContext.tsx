@@ -16,14 +16,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isValidTokenFormat = (token: string): boolean => {
     if (!token || token.length < 10) return false
-    
+
     try {
       const parts = token.split('.')
       if (parts.length === 3) {
         const header = JSON.parse(atob(parts[0]))
         return header && typeof header === 'object'
       }
-      
+
       return token.length >= 20
     } catch {
       return false
@@ -74,16 +74,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     setIsLoading(true)
-    
+
     const isAuth = checkAuth()
-    
+
     if (isAuth && window.location.pathname === '/') {
       navigate('/Home')
     }
     else if (!isAuth && window.location.pathname !== '/') {
       navigate('/')
     }
-    
+
     setIsLoading(false)
   }, [navigate])
 

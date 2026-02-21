@@ -116,14 +116,14 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
             <h1>Olá, ${name}!</h1>
             <p class="message">Estamos muito felizes em tê-lo(a) como parte da comunidade Dengue Tracker! Para começar o combate ao mosquito, precisamos verificar seu email.</p>
             <p class="message">Por favor, clique no botão abaixo para ativar sua conta:</p>
-            
+
             <div style="text-align: center;">
               <a href="${verificationUrl}" class="button">Verificar Minha Conta</a>
             </div>
-            
+
             <p class="message">Se o botão acima não funcionar, você também pode copiar e colar o link abaixo no seu navegador:</p>
             <p style="word-break: break-all; font-size: 14px; color: #666; margin-bottom: 25px;">${verificationUrl}</p>
-            
+
             <p class="message">Após a verificação, você terá acesso completo a todas as funcionalidades do <span class="highlight">Dengue Tracker</span>, incluindo:</p>
             <ul>
               <li>Registrar Focos de Dengue </li>
@@ -131,7 +131,7 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
               <li>Guia Educacional sobre a doença e como se previnir</li>
               <li>Estatísticas personalizadas</li>
             </ul>
-            
+
             <p class="message">Estamos ansiosos para ter a sua ajuda nesse combate contra esse grande Vilão!</p>
           </div>
           <div class="footer">
@@ -270,11 +270,11 @@ const sendPasswordResetCode = async (email, name, resetCode) => {
           <div class="content">
             <h1>Olá, ${name}!</h1>
             <p class="message">Recebemos uma solicitação para redefinir sua senha no Dengue Tracker. Use o código abaixo para confirmar sua identidade:</p>
-            
+
             <div class="reset-code">${resetCode}</div>
-            
+
             <p class="message">Este código é válido por 30 minutos. Se você não solicitou a recuperação de senha, ignore este email e sua senha permanecerá a mesma.</p>
-            
+
             <p class="message"><strong>IMPORTANTE:</strong> Nunca compartilhe este código com outras pessoas.</p>
           </div>
           <div class="footer">
@@ -428,15 +428,15 @@ const sendNewPasswordEmail = async (email, name, newPassword) => {
           <div class="content">
             <h1>Olá, ${name}!</h1>
             <p class="message">Sua senha foi redefinida com sucesso. Aqui está sua nova senha:</p>
-            
+
             <div class="password-box">${newPassword}</div>
-            
+
             <p class="message">Recomendamos que você altere esta senha após fazer login por uma de sua preferência através das configurações da sua conta.</p>
-            
+
             <div style="text-align: center;">
               <a href="http://localhost:5173/login" class="button">Fazer Login Agora</a>
             </div>
-            
+
             <p class="message"><strong>IMPORTANTE:</strong> Por questões de segurança, nunca compartilhe sua senha com outras pessoas.</p>
           </div>
           <div class="footer">

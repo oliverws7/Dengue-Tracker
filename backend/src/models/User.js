@@ -60,12 +60,10 @@ User.init({
   underscored: true,
   timestamps: true,
 
-  // 🔒 Por padrão NÃO retorna CPF
   defaultScope: {
     attributes: { exclude: ['cpf'] }
   },
 
-  // 🔓 Quando quiser incluir CPF
   scopes: {
     withCPF: {
       attributes: { include: ['cpf'] }

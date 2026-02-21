@@ -42,7 +42,6 @@ type DengueFocoMap = {
   reportadoPor?: string
 }
 
-
 export default function Home() {
   const [radiusKm, setRadiusKm] = useState(5)
   const [showHighRisk, setShowHighRisk] = useState(true)
@@ -50,9 +49,9 @@ export default function Home() {
   const [showLowRisk, setShowLowRisk] = useState(true)
   const [activeTab, setActiveTab] = useState("filtros")
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false)
-  
+
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [selectedFoco, setSelectedFoco] = useState<FocoDengue | null>(null)
 
@@ -108,7 +107,7 @@ export default function Home() {
       reportadoPor: foco.user?.name || foco.reportadoPor || 'Usuário não identificado',
       photoUrl: foco.photoUrl || foco.foto
     }
-    
+
     setSelectedFoco(focoForModal)
     setIsDetailsModalOpen(true)
   }
@@ -119,20 +118,20 @@ export default function Home() {
   }
 
   const handleUpdateFoco = async (focoId: string, updates: Partial<FocoDengue>) => {
-  setMapFocos(prev => prev.map(foco => 
-    foco.id === focoId 
-      ? { 
-          ...foco, 
+  setMapFocos(prev => prev.map(foco =>
+    foco.id === focoId
+      ? {
+          ...foco,
           description: updates.description || foco.description,
           riskLevel: updates.riskLevel || foco.riskLevel
         }
       : foco
   ))
 
-  setNewFocos(prev => prev.map(foco => 
-    foco.id === focoId 
-      ? { 
-          ...foco, 
+  setNewFocos(prev => prev.map(foco =>
+    foco.id === focoId
+      ? {
+          ...foco,
           description: updates.description || foco.description,
           riskLevel: updates.riskLevel || foco.riskLevel
         }
@@ -147,7 +146,7 @@ export default function Home() {
 const handleDeleteFoco = async (focoId: string) => {
   setMapFocos(prev => prev.filter(foco => foco.id !== focoId))
   setNewFocos(prev => prev.filter(foco => foco.id !== focoId))
-  
+
   if (selectedFoco?.id === focoId) {
     setIsDetailsModalOpen(false)
     setSelectedFoco(null)
@@ -218,16 +217,16 @@ const handleDeleteFoco = async (focoId: string) => {
         />
       </div>
 
-      {/* Modal para adicionar novo foco */}
+      {}
       {isModalOpen && (
-        <DengueFocusModal 
+        <DengueFocusModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onSubmit={handleModalSubmit}
         />
       )}
 
-      {/* Modal para exibir detalhes do foco */}
+      {}
       <FocoDengueModal
         foco={selectedFoco}
         isOpen={isDetailsModalOpen}

@@ -528,10 +528,10 @@ export default function MapComponent({
                 className: "custom-div-icon",
                 html: `
                   <div style="
-                    background-color: ${getRiskColor(foco.riskLevel)}; 
-                    width: ${isNewFoco ? '24px' : '20px'}; 
-                    height: ${isNewFoco ? '24px' : '20px'}; 
-                    border-radius: 50%; 
+                    background-color: ${getRiskColor(foco.riskLevel)};
+                    width: ${isNewFoco ? '24px' : '20px'};
+                    height: ${isNewFoco ? '24px' : '20px'};
+                    border-radius: 50%;
                     border: ${isNewFoco ? '3px solid #10b981' : '2px solid white'};
                     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                     display: flex;

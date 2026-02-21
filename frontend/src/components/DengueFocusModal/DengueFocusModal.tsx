@@ -265,13 +265,13 @@ const DengueFocusModal: React.FC<DengueFocusModalProps> = ({ isOpen, onClose, on
 
   const submitToAPI = async (focusData: any) => {
     const token = localStorage.getItem('authToken')
-    
+
     if (!token) {
       throw new Error('Token de autenticação não encontrado. Faça login novamente.')
     }
 
     const url = 'http://localhost:3000/api/v1/dengue-focuses'
-    
+
     if (focusData.photo) {
       const formData = new FormData()
       formData.append('latitude', focusData.location.lat.toString())
@@ -343,9 +343,9 @@ const DengueFocusModal: React.FC<DengueFocusModalProps> = ({ isOpen, onClose, on
   try {
     const result = await submitToAPI(focusData)
     console.log("Foco registrado com sucesso:", result)
-    
+
     setSubmitStatus('success')
-    
+
     const enrichedFocusData = {
       ...focusData,
       apiResponse: result,
@@ -353,7 +353,7 @@ const DengueFocusModal: React.FC<DengueFocusModalProps> = ({ isOpen, onClose, on
       id: result.data?.id,
       reportadoPor: result.data?.user?.name || 'Você'
     }
-    
+
     onSubmit(enrichedFocusData)
 
     setTimeout(() => {

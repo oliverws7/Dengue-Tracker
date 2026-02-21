@@ -11,35 +11,35 @@
     left: 0;
     z-index: 100;
   }
-  
+
   @media (max-width: 768px) {
     .sidebar {
       transform: translateX(-100%);
     }
-  
+
     .sidebar.open {
       transform: translateX(0);
     }
   }
-  
+
   .sidebar-header {
     border-bottom: 1px solid #e2e8f0;
     background-color: white;
   }
-  
+
   .header-content {
     display: flex;
     align-items: center;
     padding: 12px 16px;
     justify-content: space-between;
   }
-  
+
   .logo-side {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  
+
   .logo-icon-side {
     display: flex;
     align-items: center;
@@ -50,41 +50,41 @@
     background-color: #ef4444;
     color: white;
   }
-  
+
   .logo-text-side h2 {
     font-size: 16px;
     font-weight: 600;
     margin: 0;
   }
-  
+
   .logo-text-side p {
     font-size: 12px;
     color: #64748b;
     margin: 0;
   }
-  
+
   .sidebar-toggle {
     background: none;
     border: none;
     cursor: pointer;
     color: #64748b;
   }
-  
+
   .close-icon::before {
     content: "×";
     font-size: 24px;
   }
-  
+
   .sidebar-content {
     flex: 1;
     overflow-y: auto;
     padding: 16px 0;
   }
-  
+
   .sidebar-group {
     margin-bottom: 16px;
   }
-  
+
   .group-label {
     display: flex;
     align-items: center;
@@ -94,34 +94,34 @@
     font-weight: 500;
     color: #64748b;
   }
-  
+
   .group-content {
     padding: 8px 16px;
   }
-  
+
   .space-y {
     display: flex;
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .slider-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .slider-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .slider-header label {
     font-size: 14px;
     font-weight: 500;
   }
-  
+
   .slider-labels {
     display: flex;
     justify-content: space-between;
@@ -129,13 +129,13 @@
     color: #64748b;
     padding-top: 4px;
   }
-  
+
   .separator {
     height: 1px;
     background-color: #e2e8f0;
     margin: 8px 0;
   }
-  
+
   .risk-levels h3 {
     display: flex;
     align-items: center;
@@ -144,85 +144,85 @@
     font-weight: 500;
     margin-bottom: 12px;
   }
-  
+
   .risk-options {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .risk-option {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .risk-label {
     display: flex;
     align-items: center;
     cursor: pointer;
   }
-  
+
   .risk-dot {
     width: 12px;
     height: 12px;
     border-radius: 50%;
     margin-right: 8px;
   }
-  
+
   .high-risk {
     background-color: #ef4444;
   }
-  
+
   .medium-risk {
     background-color: #f59e0b;
   }
-  
+
   .low-risk {
     background-color: #22c55e;
   }
-  
+
   .info-card {
     border-radius: 6px;
     padding: 12px;
   }
-  
+
   .info-card.amber {
     background-color: #fffbeb;
     border: 1px solid #fcd34d;
   }
-  
+
   .info-card.blue {
     background-color: #eff6ff;
     border: 1px solid #93c5fd;
   }
-  
+
   .info-content {
     display: flex;
     gap: 8px;
     font-size: 12px;
   }
-  
+
   .info-card.amber .info-content {
     color: #92400e;
   }
-  
+
   .info-card.blue .info-content {
     color: #1e40af;
   }
-  
+
   .stats-container {
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .stats-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
-  
+
   .stat-card-content {
     padding: 12px;
     display: flex;
@@ -230,88 +230,88 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .stat-label {
     font-size: 12px;
     color: #64748b;
     margin: 0;
   }
-  
+
   .stat-value {
     font-size: 24px;
     font-weight: 700;
     margin: 0;
   }
-  
+
   .stat-value.highlight {
     color: #ef4444;
   }
-  
+
   .risk-distribution {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .risk-distribution h3 {
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 8px;
   }
-  
+
   .risk-stat {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .risk-stat-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .risk-value {
     display: flex;
     align-items: center;
     gap: 4px;
   }
-  
+
   .percentage {
     font-size: 12px;
     color: #64748b;
   }
-  
+
   .progress-bar {
     width: 100%;
     height: 8px;
     background-color: #f1f5f9;
     border-radius: 9999px;
   }
-  
+
   .progress {
     height: 100%;
     border-radius: 9999px;
   }
-  
+
   .progress.high-risk {
     background-color: #ef4444;
   }
-  
+
   .progress.medium-risk {
     background-color: #f59e0b;
   }
-  
+
   .progress.low-risk {
     background-color: #22c55e;
   }
-  
+
   .action-menu {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .action-button {
     display: flex;
     align-items: center;
@@ -324,44 +324,43 @@
     cursor: pointer;
     transition: background-color 0.2s;
   }
-  
+
   .action-button:hover {
     background-color: #f1f5f9;
   }
-  
+
   .sidebar-footer {
     border-top: 1px solid #e2e8f0;
     padding: 16px;
   }
-  
+
   .footer-content {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .system-status {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .status-indicator {
     display: flex;
     align-items: center;
     gap: 6px;
   }
-  
+
   .status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background-color: #22c55e;
   }
-  
+
   .update-time {
     font-size: 12px;
     color: #64748b;
   }
-  
-  
+

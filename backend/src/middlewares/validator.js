@@ -1,30 +1,27 @@
 const { body, validationResult } = require('express-validator');
 
-/**
- * Funções Auxiliares de Validação
- */
 const validateCoordinates = (lat, lng) => {
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lng);
-  
+
   if (isNaN(latitude) || isNaN(longitude)) return false;
   if (latitude < -90 || latitude > 90) return false;
   if (longitude < -180 || longitude > 180) return false;
-  
+
   return true;
 };
 
 const validateBrazilianCoordinates = (lat, lng) => {
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lng);
-  
+
   const brazilBounds = {
     north: 5.27,
     south: -33.75,
     east: -28.65,
     west: -73.99
   };
-  
+
   return (
     latitude >= brazilBounds.south &&
     latitude <= brazilBounds.north &&
@@ -51,14 +48,11 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-/**
- * Middlewares de Validação
- */
 const validateUserCreation = [
   body('name')
     .notEmpty().withMessage('Nome é obrigatório')
     .trim(),
-  
+
   body('email')
     .notEmpty().withMessage('Email é obrigatório')
     .isEmail().withMessage('Email inválido')
@@ -68,13 +62,13 @@ const validateUserCreation = [
     .notEmpty().withMessage('CPF é obrigatório')
     .matches(/^\d{11}$|^\d{3}\.\d{3}\.\d{3}-\d{2}$/)
     .withMessage('Formato de CPF inválido (use 11 dígitos ou formato 000.000.000-00)'),
-  
+
   body('password')
     .notEmpty().withMessage('Senha é obrigatória')
     .isLength({ min: 6 }).withMessage('Senha deve ter no mínimo 6 caracteres')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
     .withMessage('Senha deve conter pelo menos uma letra maiúscula, uma letra minúscula e um número'),
-  
+
   handleValidationErrors
 ];
 
@@ -83,10 +77,10 @@ const validateLogin = [
     .notEmpty().withMessage('Email é obrigatório')
     .isEmail().withMessage('Email inválido')
     .normalizeEmail(),
-  
+
   body('password')
     .notEmpty().withMessage('Senha é obrigatória'),
-  
+
   handleValidationErrors
 ];
 
