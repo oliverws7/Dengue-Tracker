@@ -50,7 +50,7 @@ Dengue-Tracker/
 | **Backend** | Node.js, Express, MongoDB (Mongoose), JWT |
 | **Frontend** | React 18, Vite, CSS Modules, Context API |
 | **Serviços Cloud** | AWS S3 (Armazenamento de fotos), Nodemailer |
-| **Qualidade** | ESLint, Prettier, Vitest/Jest |
+| **Qualidade** | ESLint, Prettier, Vitest/Jest  |
 
 ---
 
