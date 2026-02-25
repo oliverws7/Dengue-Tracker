@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css"
 import { AlertTriangle, Calendar, Info, MapPin, Plus } from "lucide-react"
 import Badge from "../UI/Badge/Badge"
 import Button from "../UI/Button/Button"
+import { API_URL } from "../../config/api"
 import "./MapComponent.css"
 
 type DengueFoco = {
@@ -171,7 +172,7 @@ export default function MapComponent({
       const token = localStorage.getItem('authToken')
 
       const response = await fetch(
-        `http://localhost:3000/api/v1/dengue-focuses/nearby?latitude=${lat}&longitude=${lng}&radius=${radiusKm}`,
+        `${API_URL}/dengue-focuses/nearby?latitude=${lat}&longitude=${lng}&radius=${radiusKm}`,
         {
           method: 'GET',
           headers: {

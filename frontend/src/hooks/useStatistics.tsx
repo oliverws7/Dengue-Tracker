@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { API_URL } from '../config/api';
 
 interface StatisticsData {
   summary: {
@@ -50,7 +51,7 @@ export const useStatistics = (refreshInterval: number = 30000) => {
         throw new Error('Token de autenticação não encontrado');
       }
 
-      const response = await fetch('http://localhost:3000/api/v1/dengue-focuses/statistics', {
+      const response = await fetch(`${API_URL}/dengue-focuses/statistics`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

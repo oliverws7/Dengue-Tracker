@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { MapPin, Search, Camera, Upload, AlertTriangle, X, Loader2, CheckCircle, XCircle } from "lucide-react"
+import { API_URL } from "../../config/api"
 import "./DengueFocusModal.css"
 
 interface DengueFocusModalProps {
@@ -270,7 +271,7 @@ const DengueFocusModal: React.FC<DengueFocusModalProps> = ({ isOpen, onClose, on
       throw new Error('Token de autenticação não encontrado. Faça login novamente.')
     }
 
-    const url = 'http://localhost:3000/api/v1/dengue-focuses'
+    const url = `${API_URL}/dengue-focuses`
 
     if (focusData.photo) {
       const formData = new FormData()
@@ -323,58 +324,58 @@ const DengueFocusModal: React.FC<DengueFocusModalProps> = ({ isOpen, onClose, on
   }
 
   const handleSubmit = async () => {
-  if (!address || !description || !riskLevel || !selectedLocation) {
-    alert("Por favor, preencha todos os campos obrigatórios e selecione uma localização no mapa")
-    return
-  }
-
-  setIsSubmitting(true)
-  setSubmitStatus('idle')
-
-  const focusData = {
-    address,
-    description,
-    riskLevel,
-    location: selectedLocation,
-    photo: selectedFile,
-    timestamp: new Date().toISOString(),
-  }
-
-  try {
-    const result = await submitToAPI(focusData)
-    console.log("Foco registrado com sucesso:", result)
-
-    setSubmitStatus('success')
-
-    const enrichedFocusData = {
-      ...focusData,
-      apiResponse: result,
-      photoUrl: result.data?.photoUrl,
-      id: result.data?.id,
-      reportadoPor: result.data?.user?.name || 'Você'
+    if (!address || !description || !riskLevel || !selectedLocation) {
+      alert("Por favor, preencha todos os campos obrigatórios e selecione uma localização no mapa")
+      return
     }
 
-    onSubmit(enrichedFocusData)
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
 
-    setTimeout(() => {
-      setAddress("")
-      setDescription("")
-      setRiskLevel("")
-      setSelectedLocation(null)
-      setSelectedFile(null)
-      setPreviewUrl(null)
-      setSubmitStatus('idle')
-      onClose()
-    }, 1500)
+    const focusData = {
+      address,
+      description,
+      riskLevel,
+      location: selectedLocation,
+      photo: selectedFile,
+      timestamp: new Date().toISOString(),
+    }
 
-  } catch (error) {
-    console.error("Erro ao registrar foco:", error)
-    setSubmitStatus('error')
-    alert(error instanceof Error ? error.message : "Erro ao registrar foco de dengue. Tente novamente.")
-  } finally {
-    setIsSubmitting(false)
+    try {
+      const result = await submitToAPI(focusData)
+      console.log("Foco registrado com sucesso:", result)
+
+      setSubmitStatus('success')
+
+      const enrichedFocusData = {
+        ...focusData,
+        apiResponse: result,
+        photoUrl: result.data?.photoUrl,
+        id: result.data?.id,
+        reportadoPor: result.data?.user?.name || 'Você'
+      }
+
+      onSubmit(enrichedFocusData)
+
+      setTimeout(() => {
+        setAddress("")
+        setDescription("")
+        setRiskLevel("")
+        setSelectedLocation(null)
+        setSelectedFile(null)
+        setPreviewUrl(null)
+        setSubmitStatus('idle')
+        onClose()
+      }, 1500)
+
+    } catch (error) {
+      console.error("Erro ao registrar foco:", error)
+      setSubmitStatus('error')
+      alert(error instanceof Error ? error.message : "Erro ao registrar foco de dengue. Tente novamente.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-}
 
   const getRiskColor = (risk: string) => {
     switch (risk) {

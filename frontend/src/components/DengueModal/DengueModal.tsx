@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { AlertTriangle, Calendar, MapPin, User, X, Edit2, Save, XCircle, Trash2 } from "lucide-react"
+import { API_URL } from "../../config/api"
 import "./DengueModal.css"
 
 interface FocoDengueProps {
@@ -40,7 +41,7 @@ const updateFocoBackend = async (focoId: string, updates: { description?: string
     throw new Error('Token de autenticação não encontrado')
   }
 
-  const response = await fetch(`http://localhost:3000/api/v1/dengue-focuses/${focoId}`, {
+  const response = await fetch(`${API_URL}/dengue-focuses/${focoId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -63,7 +64,7 @@ const deleteFocoBackend = async (focoId: string): Promise<void> => {
     throw new Error('Token de autenticação não encontrado')
   }
 
-  const response = await fetch(`http://localhost:3000/api/v1/dengue-focuses/${focoId}`, {
+  const response = await fetch(`${API_URL}/dengue-focuses/${focoId}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -634,7 +635,7 @@ export default function FocoDengueModal({ foco, isOpen, onClose, onUpdateFoco, o
                   <p><strong>Local:</strong> {localFoco.address}</p>
                   <p><strong>Risco:</strong> {
                     localFoco.riskLevel === "alto_risco" ? "Alto Risco" :
-                    localFoco.riskLevel === "medio_risco" ? "Médio Risco" : "Baixo Risco"
+                      localFoco.riskLevel === "medio_risco" ? "Médio Risco" : "Baixo Risco"
                   }</p>
                 </div>
                 {deleteError && (

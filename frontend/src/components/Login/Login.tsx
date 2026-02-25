@@ -4,6 +4,7 @@ import { useState, type FormEvent, useEffect } from "react"
 import { Shield, MapPin, Users, Eye, EyeOff } from "../Icons/Icons"
 import { LoginResponse } from "../../types/types"
 import { useAuth } from "../../context/AuthContext"
+import { API_URL } from "../../config/api"
 import "./Login.css"
 
 const Login: React.FC = () => {
@@ -138,7 +139,7 @@ const Login: React.FC = () => {
     setSuccess("")
 
     try {
-      const response = await fetch("http://localhost:3000/api/v1/auth/forgot-password", {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -178,7 +179,7 @@ const Login: React.FC = () => {
     setSuccess("")
 
     try {
-      const response = await fetch("http://localhost:3000/api/v1/auth/reset-password", {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -227,7 +228,7 @@ const Login: React.FC = () => {
 
     try {
       if (isRegisterMode) {
-        const response = await fetch("http://localhost:3000/api/v1/users", {
+        const response = await fetch(`${API_URL}/users`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -254,7 +255,7 @@ const Login: React.FC = () => {
         }
       } else {
 
-        const response = await fetch("http://localhost:3000/api/v1/auth/login", {
+        const response = await fetch(`${API_URL}/auth/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
