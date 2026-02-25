@@ -14,8 +14,9 @@ exports.createUser = async (req, res) => {
       });
     }
 
+    const formattedCPF = req.body.cpf.replace(/[^\d]/g, '');
     const existingCPF = await User.scope('withCPF').findOne({
-      where: { cpf: req.body.cpf.replace(/[^\d]/g, '') }
+      where: { cpf: formattedCPF }
     });
 
     if (existingCPF) {
@@ -27,9 +28,9 @@ exports.createUser = async (req, res) => {
 
     const user = await User.create({
       name: req.body.name,
-      email: req.body.email,
+      email: req.body.email.trim().toLowerCase(),
       password: req.body.password,
-      cpf: req.body.cpf,
+      cpf: formattedCPF,
       verified: false
     });
 
@@ -79,9 +80,10 @@ exports.createUser = async (req, res) => {
       });
     }
 
+    // Retornamos o erro real para o frontend conseguir nos dizer o que houve no servidor
     res.status(500).json({
       status: 'error',
-      message: 'Erro interno do servidor'
+      message: `Erro interno do servidor: ${error.message}`
     });
   }
 };
