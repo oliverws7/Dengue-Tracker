@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const sendVerificationEmail = async (email, name, verificationToken) => {
   try {
-    const BASE_URL = process.env.BASE_URL;
+    const BASE_URL = process.env.BASE_URL || 'http://localhost:3000/';
     const EMAIL_USER = process.env.EMAIL_USER;
     const EMAIL_PASSWORD = process.env.EMAIL_PASS;
     const verificationUrl = `${BASE_URL}api/v1/auth/verify-email/${verificationToken}`;
@@ -434,7 +434,7 @@ const sendNewPasswordEmail = async (email, name, newPassword) => {
             <p class="message">Recomendamos que você altere esta senha após fazer login por uma de sua preferência através das configurações da sua conta.</p>
 
             <div style="text-align: center;">
-              <a href="http://localhost:5173/login" class="button">Fazer Login Agora</a>
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" class="button">Fazer Login Agora</a>
             </div>
 
             <p class="message"><strong>IMPORTANTE:</strong> Por questões de segurança, nunca compartilhe sua senha com outras pessoas.</p>
