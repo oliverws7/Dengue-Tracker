@@ -80,7 +80,6 @@ exports.createUser = async (req, res) => {
       });
     }
 
-    // Retornamos o erro real para o frontend conseguir nos dizer o que houve no servidor
     res.status(500).json({
       status: 'error',
       message: `Erro interno do servidor: ${error.message}`

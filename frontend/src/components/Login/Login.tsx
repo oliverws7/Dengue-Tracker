@@ -10,6 +10,7 @@ import "./Login.css"
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isResendingEmail, setIsResendingEmail] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
@@ -131,6 +132,40 @@ const Login: React.FC = () => {
         setIsTransitioning(false)
       }, 50)
     }, 200)
+  }
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("Por favor, informe seu email para reenviar o código.")
+      return
+    }
+
+    setIsResendingEmail(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const response = await fetch(`${API_URL}/auth/resend-verification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess("Email de verificação reenviado com sucesso! Verifique sua caixa de entrada.")
+      } else {
+        setError(data.message || "Erro ao reenviar email. Tente novamente.")
+      }
+    } catch (err) {
+      console.error("Erro ao reenviar verificação:", err)
+      setError("Erro de conexão ao tentar reenviar o email.")
+    } finally {
+      setIsResendingEmail(false)
+    }
   }
 
   const handleForgotPassword = async () => {
@@ -407,6 +442,27 @@ const Login: React.FC = () => {
                         fontSize: '14px'
                       }}>
                         {error}
+                        {error.includes("verifique seu email") && (
+                          <button
+                            type="button"
+                            onClick={handleResendVerification}
+                            disabled={isResendingEmail}
+                            style={{
+                              display: 'block',
+                              marginTop: '8px',
+                              background: 'none',
+                              border: 'none',
+                              color: '#ef4444',
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              fontWeight: 'bold',
+                              padding: 0
+                            }}
+                          >
+                            {isResendingEmail ? "Enviando..." : "Reenviar email de verificação"}
+                          </button>
+                        )}
                       </div>
                     )}
 
