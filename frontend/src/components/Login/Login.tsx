@@ -266,25 +266,37 @@ const Login: React.FC = () => {
           }),
         })
 
-        const data: LoginResponse = await response.json()
+        // Tentar obter o JSON, mas lidar com o caso de não ser JSON
+        let data: any
+        const contentType = response.headers.get("content-type")
+        if (contentType && contentType.includes("application/json")) {
+          data = await response.json()
+        } else {
+          const text = await response.text()
+          console.error("Resposta não-JSON do servidor:", text)
+          throw new Error(`Servidor retornou erro ${response.status}: ${text.slice(0, 100)}`)
+        }
 
         if (response.ok && data.status === "success") {
           setSuccess("Login realizado com sucesso!")
-
           authLogin(data.token, data.data.user)
-
           setEmail("")
           setPassword("")
-
           console.log("Login realizado com sucesso:", data.data.user)
-
         } else {
+          // Se o servidor retornou um erro estruturado
           setError(data.message || "Credenciais inválidas. Tente novamente.")
         }
       }
-    } catch (err) {
-      console.error("Erro ao fazer requisição:", err)
-      setError("Erro de conexão. Verifique sua internet e tente novamente.")
+    } catch (err: any) {
+      console.error("Erro detalhado na requisição:", err)
+
+      // Se for um erro que nós mesmos lançamos acima
+      if (err.message && (err.message.includes("Servidor retornou erro") || err.message.includes("incorretos"))) {
+        setError(err.message)
+      } else {
+        setError("Erro de conexão. Verifique se o servidor está online e sua internet funciona.")
+      }
     } finally {
       setIsLoading(false)
     }
