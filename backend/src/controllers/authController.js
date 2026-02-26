@@ -34,12 +34,15 @@ exports.login = async (req, res) => {
       });
     }
 
+    /* 
+    Omitindo a verificação de e-mail para facilitar o acesso
     if (!user.verified) {
       return res.status(403).json({
         status: 'error',
         message: 'Por favor, verifique seu email antes de fazer login'
       });
     }
+    */
 
     const token = generateToken(user.id);
 

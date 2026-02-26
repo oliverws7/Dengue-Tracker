@@ -1,12 +1,11 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-const sendVerificationEmail = async (email, name, verificationToken) => {
+const sendVerificationEmail = async (email, name) => {
   try {
-    const BASE_URL = process.env.BASE_URL || 'http://localhost:3000/';
     const EMAIL_USER = process.env.EMAIL_USER;
     const EMAIL_PASSWORD = process.env.EMAIL_PASS;
-    const verificationUrl = `${BASE_URL}api/v1/auth/verify-email/${verificationToken}`;
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
@@ -24,124 +23,27 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Confirme seu cadastro no Dengue Tracker</title>
+        <title>Bem-vindo ao Dengue Tracker</title>
         <style>
-          body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-          }
-          .header {
-            background-color:#22c55e;
-            color: white;
-            padding: 30px;
-            text-align: center;
-          }
-          .logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: white;
-            margin: 0;
-          }
-          .tagline {
-            color: #e0e0e0;
-            margin-top: 5px;
-          }
-          .content {
-            padding: 30px;
-            background-color: #ffffff;
-          }
-          h1 {
-            color: #22c55e;
-            margin-top: 0;
-          }
-          .message {
-            margin-bottom: 25px;
-            font-size: 16px;
-          }
-          .button {
-            display: inline-block;
-            background-color: #f44336;
-            color: white;
-            text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 4px;
-            font-weight: bold;
-            margin: 20px 0;
-            text-align: center;
-            transition: background-color 0.3s;
-          }
-          .button:hover {
-            background-color: #d32f2f;
-          }
-          .footer {
-            background-color: #f5f5f5;
-            padding: 20px;
-            text-align: center;
-            font-size: 14px;
-            color: #757575;
-          }
-          .disclaimer {
-            font-size: 13px;
-            margin-top: 15px;
-          }
-          .highlight {
-            color: #f44336;
-            font-weight: bold;
-          }
-          .film-strip {
-            height: 10px;
-            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAKCAYAAACjd+4vAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB1WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS40LjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyI+CiAgICAgICAgIDx0aWZmOkNvbXByZXNzaW9uPjE8L3RpZmY6Q29tcHJlc3Npb24+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgICAgIDx0aWZmOlBob3RvbWV0cmljSW50ZXJwcmV0YXRpb24+MjwvdGlmZjpQaG90b21ldHJpY0ludGVycHJldGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KAtiABQAAAGJJREFUOBFjYBgFIBsIiGT9B2HnJwYgrYfNT7JmJkaQ6QpK/4E0SB0jI4iNKUDmnkjxf0wh1DkkS5IkCTI5iA0TJYVNkhpsehmxeRdkODZ1pIiRpIdkBeToGVXIMDIDAOcHDDcjF8H+AAAAAElFTkSuQmCC');
-            background-repeat: repeat-x;
-          }
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
+          .header { background-color: #22c55e; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { padding: 20px; }
+          .button { display: inline-block; padding: 10px 20px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
         </style>
       </head>
       <body>
         <div class="container">
-          <div class="film-strip"></div>
-          <div class="header">
-            <h1 class="logo">Dengue Tracker</h1>
-            <p class="tagline">Ajude a comunidade a combater a Dengue!</p>
-          </div>
+          <div class="header"><h1>Dengue Tracker</h1></div>
           <div class="content">
-            <h1>Olá, ${name}!</h1>
-            <p class="message">Estamos muito felizes em tê-lo(a) como parte da comunidade Dengue Tracker! Para começar o combate ao mosquito, precisamos verificar seu email.</p>
-            <p class="message">Por favor, clique no botão abaixo para ativar sua conta:</p>
-
-            <div style="text-align: center;">
-              <a href="${verificationUrl}" class="button">Verificar Minha Conta</a>
+            <h2>Olá, ${name}!</h2>
+            <p>Seu cadastro foi realizado com sucesso. Estamos felizes em ter você conosco no combate à dengue.</p>
+            <p>Agora você já pode acessar a plataforma e começar a monitorar os focos na sua região.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${FRONTEND_URL}" class="button">Acessar Plataforma</a>
             </div>
-
-            <p class="message">Se o botão acima não funcionar, você também pode copiar e colar o link abaixo no seu navegador:</p>
-            <p style="word-break: break-all; font-size: 14px; color: #666; margin-bottom: 25px;">${verificationUrl}</p>
-
-            <p class="message">Após a verificação, você terá acesso completo a todas as funcionalidades do <span class="highlight">Dengue Tracker</span>, incluindo:</p>
-            <ul>
-              <li>Registrar Focos de Dengue </li>
-              <li>Verificar Focos na sua Região</li>
-              <li>Guia Educacional sobre a doença e como se previnir</li>
-              <li>Estatísticas personalizadas</li>
-            </ul>
-
-            <p class="message">Estamos ansiosos para ter a sua ajuda nesse combate contra esse grande Vilão!</p>
+            <p>Juntos podemos fazer a diferença!</p>
           </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} Dengue Tracker- Todos os direitos reservados</p>
-            <p class="disclaimer">Este email foi enviado para ${email} porque você se cadastrou no Dengue Tracker. Se não foi você, por favor ignore este email.</p>
-            <p>O link de verificação expira em 24 horas.</p>
-          </div>
-          <div class="film-strip"></div>
         </div>
       </body>
       </html>

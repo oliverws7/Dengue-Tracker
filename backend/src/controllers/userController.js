@@ -31,13 +31,13 @@ exports.createUser = async (req, res) => {
       email: req.body.email.trim().toLowerCase(),
       password: req.body.password,
       cpf: formattedCPF,
-      verified: false
+      verified: true // Usuário já nasce verificado
     });
 
-    const verificationToken = user.generateVerificationToken();
-    await user.save();
-
-    await sendVerificationEmail(user.email, user.name, verificationToken);
+    // Enviar email de boas-vindas (sem travar o cadastro se falhar)
+    sendVerificationEmail(user.email, user.name).catch(err =>
+      console.error('Erro ao enviar email de boas-vindas:', err)
+    );
 
     const userResponse = {
       id: user.id,
@@ -50,7 +50,7 @@ exports.createUser = async (req, res) => {
 
     res.status(201).json({
       status: 'success',
-      message: 'Usuário criado com sucesso. Verifique seu email para ativar sua conta.',
+      message: 'Usuário criado com sucesso! Você já pode entrar na plataforma.',
       data: userResponse
     });
   } catch (error) {
