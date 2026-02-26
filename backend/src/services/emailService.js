@@ -9,7 +9,9 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
     const verificationUrl = `${BASE_URL}api/v1/auth/verify-email/${verificationToken}`;
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASSWORD
@@ -168,7 +170,9 @@ const sendPasswordResetCode = async (email, name, resetCode) => {
     const EMAIL_PASSWORD = process.env.EMAIL_PASS;
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASSWORD
@@ -311,7 +315,9 @@ const sendNewPasswordEmail = async (email, name, newPassword) => {
     const EMAIL_PASSWORD = process.env.EMAIL_PASS;
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASSWORD
